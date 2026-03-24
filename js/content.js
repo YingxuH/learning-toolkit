@@ -1,5 +1,17 @@
 // Textbook content organized by parts and chapters
 const TEXTBOOK = {
+  lastUpdated: "2026-03-24",
+  changelog: [
+    { date: "2026-03-24", text: "Added 6 Production War Stories: SD batch-size backfire, vLLM OOM debugging, Whisper hallucination fix, LoRA data corruption, NCCL timeout, Agent infinite loop" },
+    { date: "2026-03-24", text: "Fixed KV-cache calculations with GQA formula; updated diffusion step comparisons" },
+    { date: "2026-03-24", text: "Initial release: 10 chapters covering Audio AI, LLM Inference, ML Training, and Career Prep" }
+  ],
+  readingGoals: [
+    { id: "week1", label: "Week 1: Audio AI Foundations", chapters: ["audio-llm-landscape", "speech-to-speech", "tts-technology"] },
+    { id: "week2", label: "Week 2: LLM Inference", chapters: ["speculative-decoding", "vllm-serving"] },
+    { id: "week3", label: "Week 3: Training & Engineering", chapters: ["rl-training", "ml-engineering"] },
+    { id: "week4", label: "Week 4: Applications & Interview", chapters: ["agent-development", "system-design", "interview-prep"] }
+  ],
   parts: [
     {
       title: "Foundations of Audio AI",

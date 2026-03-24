@@ -95,6 +95,9 @@
         let html = '<div id="reading-progress"></div>';
         let chapterNum = 0;
 
+        // What's New & Reading Progress hero section
+        html += renderHeroSection();
+
         // Flatten chapters for prev/next navigation
         const allChapters = [];
         TEXTBOOK.parts.forEach(part => {
@@ -235,6 +238,14 @@
             const id = item.getAttribute('data-chapter') || item.getAttribute('data-section');
             item.classList.toggle('active', id === activeId);
         });
+
+        // Track reading progress
+        if (activeId) {
+            const chapter = document.getElementById(activeId);
+            if (chapter && chapter.classList.contains('chapter')) {
+                markChapterRead(activeId);
+            }
+        }
     }
 
     // === Reading Progress ===
@@ -273,6 +284,60 @@
                 document.getElementById('global-search').blur();
             }
         });
+    }
+
+    // === Hero Section ===
+    function renderHeroSection() {
+        const progress = getReadingProgress();
+        const totalChapters = TEXTBOOK.parts.reduce((sum, p) => sum + p.chapters.length, 0);
+        const readChapters = Object.keys(progress).length;
+        const pct = totalChapters > 0 ? Math.round((readChapters / totalChapters) * 100) : 0;
+
+        let goalsHtml = '';
+        if (TEXTBOOK.readingGoals) {
+            goalsHtml = '<div class="reading-goals"><h4>Study Plan</h4><div class="goals-grid">';
+            TEXTBOOK.readingGoals.forEach(goal => {
+                const done = goal.chapters.every(id => progress[id]);
+                const count = goal.chapters.filter(id => progress[id]).length;
+                goalsHtml += `<div class="goal-item ${done ? 'completed' : ''}">
+                    <span class="goal-check">${done ? '&#10003;' : count + '/' + goal.chapters.length}</span>
+                    <span class="goal-label">${goal.label}</span>
+                </div>`;
+            });
+            goalsHtml += '</div></div>';
+        }
+
+        let changelogHtml = '';
+        if (TEXTBOOK.changelog && TEXTBOOK.changelog.length > 0) {
+            changelogHtml = '<div class="changelog"><h4>Recent Updates</h4>';
+            TEXTBOOK.changelog.slice(0, 3).forEach(entry => {
+                changelogHtml += `<div class="changelog-item"><span class="changelog-date">${entry.date}</span> ${entry.text}</div>`;
+            });
+            changelogHtml += '</div>';
+        }
+
+        return `
+        <div class="hero-section" id="hero">
+            <div class="hero-progress">
+                <div class="progress-ring">
+                    <span class="progress-pct">${pct}%</span>
+                    <span class="progress-label">${readChapters}/${totalChapters} chapters</span>
+                </div>
+                ${goalsHtml}
+            </div>
+            ${changelogHtml}
+        </div>`;
+    }
+
+    function getReadingProgress() {
+        try { return JSON.parse(localStorage.getItem('lt_reading_progress') || '{}'); }
+        catch { return {}; }
+    }
+
+    function markChapterRead(chapterId) {
+        const progress = getReadingProgress();
+        progress[chapterId] = Date.now();
+        localStorage.setItem('lt_reading_progress', JSON.stringify(progress));
     }
 
     // Export for other modules
