@@ -235,7 +235,7 @@ const TEXTBOOK = {
 <h4>Flow Matching vs. Diffusion</h4>
 <p>Flow Matching has emerged as the preferred generation mechanism in modern TTS:</p>
 
-<p><strong>Diffusion models</strong> gradually add noise to data, then learn to reverse the process. Each step is small, requiring many iterations (typically 50-1000 steps).</p>
+<p><strong>Diffusion models</strong> gradually add noise to data, then learn to reverse the process. Early diffusion required many iterations (50-1000 steps), though modern solvers (DPM-Solver, consistency distillation) can reduce this to 1-4 steps.</p>
 
 <p><strong>Flow Matching</strong> learns a direct velocity field that transforms a simple distribution (noise) into the data distribution. It's like drawing a straight path between noise and clean audio, rather than taking many small random steps.</p>
 
@@ -252,7 +252,7 @@ def flow_matching_loss(model, x_clean, x_noise, t):
 
 <p><strong>Advantages of Flow Matching:</strong></p>
 <ul>
-<li>Fewer inference steps needed (often 10-50 vs 50-1000 for diffusion)</li>
+<li>Fewer inference steps needed (10-50 vs 50-1000 for vanilla diffusion; though modern diffusion solvers close this gap)</li>
 <li>More stable training</li>
 <li>Straighter generation paths = faster convergence</li>
 <li>Compatible with Optimal Transport for even more efficient paths</li>
@@ -394,6 +394,11 @@ python -m sglang.launch_server \\
 <div class="callout-title">Production Tip</div>
 <p>For production deployments: use EAGLE-2/3 at low concurrency (batch 1-8) for maximum latency reduction. At high concurrency (batch 32+), the baseline throughput of continuous batching often exceeds SD's benefits. Profile your specific workload.</p>
 </div>
+
+<div class="callout warning">
+<div class="callout-title">Production War Story: When Speculative Decoding Backfired</div>
+<p>We deployed EAGLE-2 on a Qwen-2.5-72B service expecting 3x latency reduction. At batch=1 during testing: 3.2x improvement. In production with 20 concurrent users: only 1.1x, barely worth the complexity. The draft model consumed GPU memory that could have served 30% more concurrent requests via vanilla continuous batching. <strong>Lesson:</strong> Always benchmark SD under your actual concurrency patterns, not batch=1. We switched to SD only for our low-traffic high-priority API tier and removed it from the main serving path. Throughput improved 25% after removing it.</p>
+</div>
 `
             }
           ]
@@ -411,7 +416,7 @@ python -m sglang.launch_server \\
 <h4>The KV-Cache Problem</h4>
 <p>During autoregressive generation, each token requires attention to all previous tokens. The key-value pairs (KV-cache) grow linearly with sequence length and must be stored in GPU memory. With naive allocation:</p>
 <ul>
-<li>A 13B model serving 2048-token sequences needs ~1.7GB of KV-cache per request</li>
+<li>A 13B model (MHA, 40 layers, 40 heads) serving 2048-token sequences needs ~1.6GB of KV-cache per request</li>
 <li>Memory fragmentation wastes 60-80% of available KV-cache memory</li>
 <li>Internal fragmentation: pre-allocating max sequence length wastes memory for shorter sequences</li>
 <li>External fragmentation: gaps between allocated blocks can't be used</li>
@@ -483,6 +488,11 @@ python -m vllm.entrypoints.openai.api_server \\
 
 <h4>Prefix Caching</h4>
 <p>When many requests share the same system prompt, prefix caching reuses the KV-cache for the shared prefix. This can reduce TTFT by 80%+ for chat applications with long system prompts.</p>
+
+<div class="callout warning">
+<div class="callout-title">Production War Story: The OOM That Wasn't</div>
+<p>Our vLLM deployment kept OOMing at ~200 concurrent requests despite having 80GB A100s. <code>nvidia-smi</code> showed 71GB used, well under the 80GB limit. The culprit: <code>gpu-memory-utilization</code> was set to 0.9 (72GB), but vLLM reserves memory for KV-cache blocks upfront. With our 4096 max_model_len and the model weights taking 28GB, only 44GB was left for KV-cache - enough for ~180 concurrent requests at average sequence length. <strong>Fix:</strong> Reduced <code>max_model_len</code> to 2048 (our actual P99 was 1200 tokens) and increased <code>gpu-memory-utilization</code> to 0.95. Concurrent capacity jumped to 350+. <strong>Lesson:</strong> Always set <code>max_model_len</code> based on your actual traffic distribution, not the model's maximum capability.</p>
+</div>
 
 <div class="interview-q">
 <div class="q-label">Interview Question</div>
@@ -690,6 +700,11 @@ scaler.update()</code></pre>
 <tr><td>High WER on accented speech</td><td>Training data mismatch</td><td>Fine-tune on target accent data</td></tr>
 <tr><td>Repeated phrases</td><td>Attention alignment failure</td><td>Adjust beam search, add repetition penalty</td></tr>
 </table>
+
+<div class="callout warning">
+<div class="callout-title">Production War Story: Whisper Hallucinating on Silence</div>
+<p>Our Singlish ASR pipeline using Whisper large-v3 produced garbage transcriptions for ~8% of audio files. Investigation revealed these files contained long silence segments (>5s) where Whisper hallucinated repeated phrases like "Thank you for watching" or random Chinese text. The root cause: no Voice Activity Detection (VAD) preprocessing. <strong>Fix:</strong> Added Silero VAD as a preprocessing step to trim silence and segment audio. Hallucination rate dropped from 8% to 0.3%. Additional improvement: set <code>no_speech_threshold=0.6</code> and <code>condition_on_previous_text=False</code> to prevent hallucination cascading. <strong>Lesson:</strong> VAD is not optional in production ASR - it's your first line of defense against the model's tendency to generate text from noise.</p>
+</div>
 
 <div class="interview-q">
 <div class="q-label">Interview Question</div>
@@ -966,7 +981,7 @@ cloudflared tunnel --url http://localhost:8000
 <div class="interview-q">
 <div class="q-label">Fundamentals</div>
 <div class="q-text">What is KV-cache in LLM inference, and why is it necessary?</div>
-<div class="a-text">During autoregressive generation, each new token needs to attend to all previous tokens. Without caching, generating token N requires recomputing K and V projections for all N-1 previous tokens - O(N^2) total computation for a sequence. The KV-cache stores previously computed K and V tensors so each step only computes K,V for the new token and appends to the cache. This reduces generation from O(N^2) to O(N). <strong>The cost:</strong> Memory. For a 70B model, KV-cache for 4096 tokens is ~2.5GB per request. This is why PagedAttention (vLLM) and KV-cache compression are critical for production serving.</div>
+<div class="a-text">During autoregressive generation, each new token needs to attend to all previous tokens. Without caching, generating token N requires recomputing K and V projections for all N-1 previous tokens - O(N^2) total computation for a sequence. The KV-cache stores previously computed K and V tensors so each step only computes K,V for the new token and appends to the cache. This reduces generation from O(N^2) to O(N). <strong>The cost:</strong> Memory. Formula: <code>2 * n_layers * n_kv_heads * head_dim * seq_len * bytes_per_param</code>. For LLaMA-2 70B (GQA with 8 KV heads, 80 layers, head_dim=128, FP16): KV-cache for 4096 tokens is ~1.25GB per request. For MHA models (all heads are KV heads), the cost is much higher. This is why PagedAttention (vLLM) and KV-cache compression are critical for production serving.</div>
 </div>
 `
             },

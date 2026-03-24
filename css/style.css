@@ -631,6 +631,17 @@ body {
         margin: 0 8px;
     }
 
+    /* Larger tap targets for mobile */
+    .nav-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+
+    .nav-right {
+        gap: 4px;
+    }
+
     .chapter h2 {
         font-size: 1.5rem;
     }
@@ -650,6 +661,41 @@ body {
         display: none;
     }
 }
+
+/* Chapter navigation buttons */
+.chapter-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    margin-top: 32px;
+    border-top: 1px solid var(--border-color);
+    gap: 12px;
+}
+
+.chapter-nav a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    min-height: 44px;
+}
+
+.chapter-nav a:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+}
+
+.chapter-nav .nav-prev { margin-right: auto; }
+.chapter-nav .nav-next { margin-left: auto; }
 
 /* Sidebar overlay for mobile */
 #sidebar-overlay {

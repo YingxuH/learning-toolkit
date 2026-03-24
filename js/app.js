@@ -95,9 +95,16 @@
         let html = '<div id="reading-progress"></div>';
         let chapterNum = 0;
 
+        // Flatten chapters for prev/next navigation
+        const allChapters = [];
+        TEXTBOOK.parts.forEach(part => {
+            part.chapters.forEach(ch => allChapters.push(ch));
+        });
+
         TEXTBOOK.parts.forEach((part) => {
             part.chapters.forEach(chapter => {
                 chapterNum++;
+                const chIdx = allChapters.indexOf(chapter);
                 html += `<div class="chapter" id="${chapter.id}">`;
                 html += `<div class="chapter-number">Chapter ${chapterNum}</div>`;
                 html += `<h2>${chapter.title}</h2>`;
@@ -109,11 +116,32 @@
                     html += `</section>`;
                 });
 
+                // Chapter navigation buttons
+                html += `<div class="chapter-nav">`;
+                if (chIdx > 0) {
+                    html += `<a class="nav-prev" href="#${allChapters[chIdx-1].id}">&larr; ${allChapters[chIdx-1].title}</a>`;
+                } else {
+                    html += `<span></span>`;
+                }
+                if (chIdx < allChapters.length - 1) {
+                    html += `<a class="nav-next" href="#${allChapters[chIdx+1].id}">${allChapters[chIdx+1].title} &rarr;</a>`;
+                }
+                html += `</div>`;
+
                 html += `</div>`;
             });
         });
 
         container.innerHTML = html;
+
+        // Chapter nav click handlers
+        container.querySelectorAll('.chapter-nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = link.getAttribute('href').slice(1);
+                scrollToSection(id);
+            });
+        });
 
         // Restore highlights
         if (window.HighlightManager) {
