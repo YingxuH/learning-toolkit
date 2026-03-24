@@ -1,0 +1,138 @@
+/* === Highlight Toolbar === */
+#highlight-toolbar {
+    position: absolute;
+    display: flex;
+    gap: 4px;
+    padding: 6px 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 1500;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hl-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    background: var(--bg-secondary);
+}
+
+.hl-btn:hover {
+    transform: scale(1.15);
+    border-color: var(--accent);
+}
+
+.hl-yellow { background: #fff3b0 !important; }
+.hl-green { background: #b8f0c0 !important; }
+.hl-blue { background: #b0d4ff !important; }
+.hl-pink { background: #ffb0d0 !important; }
+
+#hl-comment, #hl-ask-ai {
+    background: var(--bg-primary);
+}
+
+/* === Highlighted Text === */
+.user-highlight {
+    border-radius: 2px;
+    padding: 0 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+}
+
+.user-highlight:hover {
+    filter: brightness(0.92);
+}
+
+.user-highlight.color-yellow { background: rgba(255, 235, 59, 0.35); }
+.user-highlight.color-green { background: rgba(76, 175, 80, 0.25); }
+.user-highlight.color-blue { background: rgba(66, 165, 245, 0.25); }
+.user-highlight.color-pink { background: rgba(244, 67, 54, 0.2); }
+
+[data-theme="dark"] .user-highlight.color-yellow { background: rgba(255, 235, 59, 0.2); }
+[data-theme="dark"] .user-highlight.color-green { background: rgba(76, 175, 80, 0.15); }
+[data-theme="dark"] .user-highlight.color-blue { background: rgba(66, 165, 245, 0.15); }
+[data-theme="dark"] .user-highlight.color-pink { background: rgba(244, 67, 54, 0.12); }
+
+/* Highlight with comment indicator */
+.user-highlight.has-comment::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 1px solid var(--bg-primary);
+}
+
+/* Comment tooltip */
+.comment-tooltip {
+    position: absolute;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    max-width: 300px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1400;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    animation: fadeIn 0.15s ease;
+}
+
+.comment-tooltip .comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.comment-tooltip .comment-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.comment-tooltip .comment-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.comment-tooltip .comment-actions button {
+    font-size: 0.78rem;
+    padding: 2px 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.comment-tooltip .comment-actions button:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.comment-tooltip .comment-actions button.delete-comment {
+    color: #e74c3c;
+}
+
+.comment-tooltip .comment-actions button.delete-comment:hover {
+    background: rgba(231,76,60,0.1);
+}

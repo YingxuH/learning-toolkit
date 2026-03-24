@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Engineer Learning Toolkit</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/highlights.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav id="top-nav">
+        <div class="nav-left">
+            <button id="sidebar-toggle" class="nav-btn" title="Toggle Sidebar">&#9776;</button>
+            <h1 class="nav-title">AI Engineer Learning Toolkit</h1>
+        </div>
+        <div class="nav-center">
+            <div class="search-container">
+                <input type="text" id="global-search" placeholder="Search content... (Ctrl+K)" autocomplete="off">
+                <div id="search-results" class="search-dropdown hidden"></div>
+            </div>
+        </div>
+        <div class="nav-right">
+            <button id="theme-toggle" class="nav-btn" title="Toggle Theme">&#9789;</button>
+            <button id="chat-toggle" class="nav-btn" title="AI Assistant (Ctrl+/)">&#128172;</button>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div id="app-container">
+        <!-- Sidebar / Table of Contents -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <h2>Contents</h2>
+            </div>
+            <nav id="toc"></nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main id="content-area">
+            <div id="textbook-content"></div>
+        </main>
+
+        <!-- AI Chat Panel -->
+        <aside id="chat-panel" class="hidden">
+            <div class="chat-header">
+                <h3>AI Assistant</h3>
+                <div class="chat-header-actions">
+                    <button id="chat-clear" class="chat-btn" title="Clear Chat">Clear</button>
+                    <button id="chat-close" class="chat-btn" title="Close">&times;</button>
+                </div>
+            </div>
+            <div id="chat-context-banner" class="hidden">
+                <span id="chat-context-text"></span>
+                <button id="clear-context" title="Clear context">&times;</button>
+            </div>
+            <div id="chat-messages"></div>
+            <div id="chat-input-area">
+                <textarea id="chat-input" placeholder="Ask about highlighted text or any topic..." rows="2"></textarea>
+                <button id="chat-send" title="Send">&#10148;</button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Highlight Toolbar (appears on text selection) -->
+    <div id="highlight-toolbar" class="hidden">
+        <button class="hl-btn hl-yellow" data-color="yellow" title="Highlight Yellow"></button>
+        <button class="hl-btn hl-green" data-color="green" title="Highlight Green"></button>
+        <button class="hl-btn hl-blue" data-color="blue" title="Highlight Blue"></button>
+        <button class="hl-btn hl-pink" data-color="pink" title="Highlight Pink"></button>
+        <button class="hl-btn" id="hl-comment" title="Add Comment">&#128221;</button>
+        <button class="hl-btn" id="hl-ask-ai" title="Ask AI about this">&#129302;</button>
+    </div>
+
+    <!-- Comment Modal -->
+    <div id="comment-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Add Comment</h3>
+            <textarea id="comment-text" placeholder="Write your comment..." rows="4"></textarea>
+            <div class="modal-actions">
+                <button id="comment-save" class="btn-primary">Save</button>
+                <button id="comment-cancel" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/content.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/highlights.js"></script>
+    <script src="js/comments.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>
