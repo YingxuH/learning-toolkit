@@ -134,6 +134,22 @@
 
         container.innerHTML = html;
 
+        // Wrap tables for mobile scroll affordance
+        if (window.innerWidth < 768) {
+            container.querySelectorAll('.chapter table').forEach(table => {
+                if (!table.parentElement.classList.contains('table-wrapper')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'table-wrapper';
+                    table.parentNode.insertBefore(wrapper, table);
+                    wrapper.appendChild(table);
+                    wrapper.addEventListener('scroll', () => {
+                        const atEnd = wrapper.scrollLeft + wrapper.clientWidth >= wrapper.scrollWidth - 5;
+                        wrapper.classList.toggle('scrolled-end', atEnd);
+                    });
+                }
+            });
+        }
+
         // Chapter nav click handlers
         container.querySelectorAll('.chapter-nav a').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -153,6 +169,9 @@
     function setupNavigation() {
         // Sidebar toggle
         document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
+        document.getElementById('sidebar-close').addEventListener('click', () => {
+            if (state.sidebarOpen) toggleSidebar();
+        });
 
         // Theme toggle
         document.getElementById('theme-toggle').addEventListener('click', () => {

@@ -224,6 +224,9 @@ body {
 .sidebar-header {
     padding: 20px 20px 12px;
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .sidebar-header h2 {
@@ -232,6 +235,26 @@ body {
     letter-spacing: 0.08em;
     color: var(--text-muted);
     font-weight: 600;
+}
+
+#sidebar-close {
+    display: none;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    #sidebar-close {
+        display: flex;
+    }
 }
 
 #toc {
@@ -253,7 +276,7 @@ body {
 
 .toc-item {
     display: block;
-    padding: 8px 20px 8px 28px;
+    padding: 10px 20px 10px 28px;
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.88rem;
@@ -261,6 +284,9 @@ body {
     transition: all 0.15s;
     cursor: pointer;
     line-height: 1.4;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
 }
 
 .toc-item:hover {
@@ -646,10 +672,31 @@ body {
         font-size: 1.5rem;
     }
 
-    .chapter table {
-        display: block;
+    .chapter .table-wrapper {
+        position: relative;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        margin-bottom: 16px;
+    }
+
+    .chapter .table-wrapper::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 24px;
+        background: linear-gradient(to right, transparent, var(--bg-primary));
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    .chapter .table-wrapper.scrolled-end::after {
+        opacity: 0;
+    }
+
+    .chapter table {
+        min-width: 500px;
     }
 
     .chapter pre {

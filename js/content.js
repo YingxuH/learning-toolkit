@@ -614,6 +614,16 @@ scaler.update()</code></pre>
 <tr><td>Gradient norm spikes</td><td>Bad data batch, model instability</td><td>Gradient clipping, data filtering</td></tr>
 </table>
 
+<div class="callout warning">
+<div class="callout-title">Production War Story: The Silent Data Corruption</div>
+<p>Our LoRA fine-tune of Qwen2.5-7B showed great validation metrics but produced gibberish in production. Root cause: our data pipeline had a race condition in multi-worker data loading that corrupted ~2% of training examples by truncating them mid-sentence. The model learned to generate truncated outputs. Validation didn't catch it because we used BLEU/ROUGE on the remaining 98% of clean data. <strong>Fix:</strong> Added data integrity checks (hash verification per batch), logged sample outputs during training (not just loss), and added a "coherence score" to validation that measures output completeness. <strong>Lesson:</strong> Always inspect actual model outputs during training, not just aggregate metrics. A low loss number can hide catastrophic failure modes.</p>
+</div>
+
+<div class="callout warning">
+<div class="callout-title">Production War Story: NCCL Timeout on 8-Node Training</div>
+<p>Training on 64 H100s across 8 nodes kept hanging at step ~500 with NCCL timeout errors. Single-node training worked fine. The issue: one node had a flaky InfiniBand cable that dropped packets under sustained all-reduce load. <code>ibstat</code> showed the link was "Active" but <code>perfquery</code> revealed 0.1% packet loss. <strong>Fix:</strong> Replaced the cable, added <code>NCCL_IB_TIMEOUT=23</code> and <code>NCCL_IB_RETRY_CNT=7</code> as environment variables, and set up a pre-training health check script that runs <code>all_reduce_bench</code> across all nodes before every training job. <strong>Lesson:</strong> Network issues in distributed training manifest as random hangs, not error messages. Always benchmark inter-node communication before starting a multi-day training run.</p>
+</div>
+
 <div class="interview-q">
 <div class="q-label">Interview Question</div>
 <div class="q-text">You need to train a 70B model. You have 64 H100 GPUs across 8 nodes. What parallelism strategy would you use?</div>
@@ -803,6 +813,11 @@ while not done:
 <div class="callout tip">
 <div class="callout-title">Self-Improving Agent Pattern</div>
 <p>A self-improving agent learns from its own execution: (1) Execute task, (2) Evaluate outcome, (3) Extract learnings, (4) Update memory/prompts. Key: separate the "execution" from the "reflection" phase. The reflection should happen with full context of what went wrong and why.</p>
+</div>
+
+<div class="callout warning">
+<div class="callout-title">Production War Story: Agent Infinite Loop in Production</div>
+<p>Our code-generation agent entered an infinite loop in production: it would write code, the test would fail, it would "fix" the code by reverting to the original, the test would fail again, repeat. Cost us $400 in API calls before the timeout hit. Root cause: the agent's context window filled up with repeated failed attempts, pushing out the original error message that explained the actual bug. <strong>Fix:</strong> (1) Added a hard limit of 5 retries per sub-task, (2) Implemented "error deduplication" - if the same error appears 3x, escalate to a different strategy instead of retrying, (3) Added a sliding window that always preserves the first error message. <strong>Lesson:</strong> Agents need circuit breakers just like microservices. Without explicit loop detection, LLMs will confidently repeat the same mistake forever.</p>
 </div>
 
 <div class="interview-q">
