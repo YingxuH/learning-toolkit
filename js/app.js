@@ -15,17 +15,36 @@
 
     function init() {
         applyTheme(state.theme);
+        createOverlay();
         renderTOC();
         renderContent();
         setupNavigation();
         setupKeyboardShortcuts();
         setupReadingProgress();
 
+        // Collapse sidebar on mobile by default
+        if (window.innerWidth < 768) {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.add('collapsed');
+            state.sidebarOpen = false;
+        }
+
         // Navigate to hash or first chapter
         const hash = window.location.hash.slice(1);
         if (hash) {
             scrollToSection(hash);
         }
+    }
+
+    function createOverlay() {
+        const overlay = document.createElement('div');
+        overlay.id = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', () => {
+            if (state.sidebarOpen && window.innerWidth < 768) {
+                toggleSidebar();
+            }
+        });
     }
 
     // === Theme ===
@@ -128,6 +147,12 @@
         const sidebar = document.getElementById('sidebar');
         sidebar.classList.toggle('collapsed');
         state.sidebarOpen = !state.sidebarOpen;
+
+        // Handle overlay for mobile
+        const overlay = document.getElementById('sidebar-overlay');
+        if (overlay) {
+            overlay.classList.toggle('visible', state.sidebarOpen && window.innerWidth < 768);
+        }
     }
 
     function toggleChat() {

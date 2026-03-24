@@ -610,6 +610,13 @@ body {
         bottom: 0;
         z-index: 500;
         box-shadow: var(--shadow-lg);
+        transform: translateX(0);
+        transition: transform 0.3s ease;
+    }
+
+    #sidebar.collapsed {
+        margin-left: 0;
+        transform: translateX(-100%);
     }
 
     #content-area {
@@ -620,7 +627,42 @@ body {
         font-size: 0.95rem;
     }
 
+    .nav-center {
+        margin: 0 8px;
+    }
+
     .chapter h2 {
         font-size: 1.5rem;
     }
+
+    .chapter table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .chapter pre {
+        font-size: 0.78rem;
+        padding: 12px;
+    }
+
+    .search-container {
+        display: none;
+    }
+}
+
+/* Sidebar overlay for mobile */
+#sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 499;
+}
+
+#sidebar-overlay.visible {
+    display: block;
 }
