@@ -67,12 +67,8 @@
         });
     }
 
-    // Run after all content scripts load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', mergeContent);
-    } else {
-        mergeContent();
-    }
+    // Run immediately - all content scripts are already loaded (synchronous script tags)
+    mergeContent();
 
     window.ContentLoader = { mergeContent };
 })();
