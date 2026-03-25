@@ -1,74 +1,71 @@
 // Content Loader - merges expanded chapter content into TEXTBOOK
+// Runs synchronously before app.js init
 (function() {
     'use strict';
-
-    // Map of chapter IDs to their expanded content sources
-    const contentSources = [
-        { obj: 'CONTENT_CH1_2', chapters: { ch1: 'ch1_sections', ch2: 'ch2_sections' }, chapterIds: ['audio-llm-landscape', 'speech-to-speech'] },
-        { obj: 'CONTENT_CH3_4', chapters: { ch3: 'ch3_sections', ch4: 'ch4_sections' }, chapterIds: ['tts-technology', 'speculative-decoding'] },
-        { obj: 'CONTENT_CH5_6', chapters: { ch5: 'ch5_sections', ch6: 'ch6_sections' }, chapterIds: ['vllm-serving', 'rl-training'] },
-        { obj: 'CONTENT_CH7_8', chapters: { ch7: 'ch7_sections', ch8: 'ch8_sections' }, chapterIds: ['ml-engineering', 'agent-development'] },
-        { obj: 'CONTENT_CH9_10', chapters: { ch9: 'ch9_sections', ch10: 'ch10_sections' }, chapterIds: ['system-design', 'interview-prep'] }
-    ];
 
     function mergeContent() {
         if (!window.TEXTBOOK) return;
 
+        // Build chapter lookup
         const chapterMap = {};
-        TEXTBOOK.parts.forEach(part => {
-            part.chapters.forEach(ch => {
+        TEXTBOOK.parts.forEach(function(part) {
+            part.chapters.forEach(function(ch) {
                 chapterMap[ch.id] = ch;
             });
         });
 
-        contentSources.forEach(source => {
-            const obj = window[source.obj];
-            if (!obj) return;
+        // Merge function
+        function mergeChapter(chapterId, newSections) {
+            if (!newSections || !chapterMap[chapterId]) return;
+            var chapter = chapterMap[chapterId];
+            var merged = [];
+            var processedIds = {};
 
-            const keys = Object.keys(source.chapters);
-            keys.forEach((key, idx) => {
-                const sectionsKey = source.chapters[key];
-                const chapterId = source.chapterIds[idx];
-                const sections = obj[sectionsKey];
-
-                if (!sections || !chapterMap[chapterId]) return;
-
-                // Replace sections in the chapter
-                const chapter = chapterMap[chapterId];
-                const newSections = sections.map(s => ({
-                    id: s.id,
-                    title: s.title,
-                    content: s.content
-                }));
-
-                // Merge: keep existing sections that aren't replaced, add new ones
-                const existingIds = new Set(chapter.sections.map(s => s.id));
-                const newIds = new Set(newSections.map(s => s.id));
-
-                // Replace existing sections with expanded versions
-                const merged = [];
-                const processedIds = new Set();
-
-                // First add all new sections in order
-                newSections.forEach(ns => {
-                    merged.push(ns);
-                    processedIds.add(ns.id);
+            // Add all new sections first
+            for (var i = 0; i < newSections.length; i++) {
+                merged.push({
+                    id: newSections[i].id,
+                    title: newSections[i].title,
+                    content: newSections[i].content
                 });
+                processedIds[newSections[i].id] = true;
+            }
 
-                // Then add any existing sections not covered by new content
-                chapter.sections.forEach(es => {
-                    if (!processedIds.has(es.id)) {
-                        merged.push(es);
-                    }
-                });
+            // Add existing sections not in new content
+            for (var j = 0; j < chapter.sections.length; j++) {
+                if (!processedIds[chapter.sections[j].id]) {
+                    merged.push(chapter.sections[j]);
+                }
+            }
 
-                chapter.sections = merged;
-            });
-        });
+            chapter.sections = merged;
+        }
+
+        // Merge each expanded content file
+        if (window.CONTENT_CH1_2) {
+            mergeChapter('audio-llm-landscape', window.CONTENT_CH1_2.ch1_sections);
+            mergeChapter('speech-to-speech', window.CONTENT_CH1_2.ch2_sections);
+        }
+        if (window.CONTENT_CH3_4) {
+            mergeChapter('tts-technology', window.CONTENT_CH3_4.ch3_sections);
+            mergeChapter('speculative-decoding', window.CONTENT_CH3_4.ch4_sections);
+        }
+        if (window.CONTENT_CH5_6) {
+            mergeChapter('vllm-serving', window.CONTENT_CH5_6.ch5_sections);
+            mergeChapter('rl-training', window.CONTENT_CH5_6.ch6_sections);
+        }
+        if (window.CONTENT_CH7_8) {
+            mergeChapter('ml-engineering', window.CONTENT_CH7_8.ch7_sections);
+            mergeChapter('agent-development', window.CONTENT_CH7_8.ch8_sections);
+        }
+        if (window.CONTENT_CH9_10) {
+            mergeChapter('system-design', window.CONTENT_CH9_10.ch9_sections);
+            mergeChapter('interview-prep', window.CONTENT_CH9_10.ch10_sections);
+        }
     }
 
-    // Run immediately - all content scripts are already loaded (synchronous script tags)
+    // Run immediately
     mergeContent();
 
-    window.ContentLoader = { mergeContent };
+    window.ContentLoader = { mergeContent: mergeContent };
 })();
