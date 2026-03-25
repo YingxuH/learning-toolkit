@@ -5,7 +5,7 @@
     --bg-sidebar: #f0f2f5;
     --bg-nav: #1a1a2e;
     --text-primary: #1a1a2e;
-    --text-secondary: #4a4a6a;
+    --text-secondary: #3a3a5a;
     --text-muted: #8888a0;
     --border-color: #e0e0e8;
     --accent: #4361ee;
@@ -95,8 +95,9 @@ body {
     background: transparent;
     border: 1px solid rgba(255,255,255,0.15);
     color: #fff;
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     font-size: 1.1rem;
@@ -878,4 +879,47 @@ body {
 
 #sidebar-overlay.visible {
     display: block;
+}
+
+/* === Language Toggle === */
+.lang-btn {
+    font-size: 0.78rem !important;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+/* === Chapter Indicator (floating) === */
+#chapter-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--bg-nav);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    z-index: 900;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    box-shadow: var(--shadow);
+}
+
+@media (max-width: 768px) {
+    #chapter-indicator {
+        bottom: 12px;
+        right: 12px;
+        font-size: 0.72rem;
+        padding: 4px 10px;
+    }
+}
+
+/* === Table scroll hint === */
+.table-wrapper .scroll-hint {
+    text-align: right;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding: 2px 0;
+    opacity: 0.7;
 }
