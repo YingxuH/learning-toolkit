@@ -7,7 +7,12 @@ admin.initializeApp();
 
 // Gemini API Key - store as Firebase secret in production:
 // firebase functions:secrets:set GEMINI_API_KEY
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "REDACTED_GEMINI_KEY";
+// API key MUST be set via environment variable or Firebase secret. Never hardcode.
+// Deploy with: firebase functions:secrets:set GEMINI_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+    console.error("GEMINI_API_KEY environment variable is not set");
+}
 
 // Rate limiting: max requests per user per minute
 const RATE_LIMIT = 10;
