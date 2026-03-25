@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bilingual Support Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Bilingual Support Unit Tests</h1>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <script src="../js/i18n.js"></script>
+    <script src="../js/content.js"></script>
+    <script src="../js/content-zh.js"></script>
+    <script>
+    (function() {
+        let passed = 0, failed = 0, total = 0;
+        const results = document.getElementById('test-results');
+
+        function assert(condition, testName, details) {
+            total++;
+            const status = condition ? 'PASS' : 'FAIL';
+            if (condition) passed++; else failed++;
+            const cls = condition ? 'pass' : 'fail';
+            results.innerHTML += `<div class="${cls}">[${status}] ${testName}${details && !condition ? ' - ' + details : ''}</div>`;
+        }
+
+        function group(name) {
+            results.innerHTML += `<div class="test-group"><h3>${name}</h3>`;
+        }
+        function endGroup() {
+            results.innerHTML += `</div>`;
+        }
+
+        // === Test Group 1: I18n Module Exists ===
+        group('I18n Module');
+        assert(typeof window.I18n !== 'undefined', 'I18n module exists');
+        assert(typeof window.I18n.t === 'function', 'I18n.t is a function');
+        assert(typeof window.I18n.getLang === 'function', 'I18n.getLang is a function');
+        assert(typeof window.I18n.setLang === 'function', 'I18n.setLang is a function');
+        assert(typeof window.I18n.toggleLang === 'function', 'I18n.toggleLang is a function');
+        endGroup();
+
+        // === Test Group 2: Default Language ===
+        group('Default Language');
+        localStorage.removeItem('lt_language');
+        // Re-init
+        window.I18n.setLang('en');
+        assert(window.I18n.getLang() === 'en', 'Default language is English');
+        assert(window.I18n.t('nav_title') === null, 'English returns null (use original)');
+        endGroup();
+
+        // === Test Group 3: Chinese Translations ===
+        group('Chinese Translations - UI Elements');
+        window.I18n.setLang('zh');
+        assert(window.I18n.getLang() === 'zh', 'Language set to Chinese');
+        assert(window.I18n.t('nav_title') === 'AI工程师学习手册', 'Nav title translated: ' + window.I18n.t('nav_title'));
+        assert(window.I18n.t('contents') === '目录', 'Contents translated');
+        assert(window.I18n.t('search_placeholder') === '搜索内容... (Ctrl+K)', 'Search placeholder translated');
+        assert(window.I18n.t('ai_assistant') === 'AI助手', 'AI assistant translated');
+        assert(window.I18n.t('study_plan') === '学习计划', 'Study plan translated');
+        assert(window.I18n.t('recent_updates') === '最近更新', 'Recent updates translated');
+        endGroup();
+
+        // === Test Group 4: Chinese Chapter Titles ===
+        group('Chinese Translations - Chapter Titles');
+        assert(window.I18n.t('audio-llm-landscape') === 'AudioLLM研究全景', 'Ch1 title: ' + window.I18n.t('audio-llm-landscape'));
+        assert(window.I18n.t('speech-to-speech') === '语音对话模型', 'Ch2 title');
+        assert(window.I18n.t('tts-technology') === '语音合成（TTS）技术', 'Ch3 title');
+        assert(window.I18n.t('speculative-decoding') === '投机解码', 'Ch4 title');
+        assert(window.I18n.t('vllm-serving') === 'vLLM推理服务', 'Ch5 title');
+        assert(window.I18n.t('rl-training') === 'LLM强化学习训练（RLHF/RLVR）', 'Ch6 title');
+        assert(window.I18n.t('ml-engineering') === 'ML工程最佳实践', 'Ch7 title');
+        assert(window.I18n.t('agent-development') === 'AI Agent开发', 'Ch8 title');
+        assert(window.I18n.t('system-design') === 'AI应用系统设计', 'Ch9 title');
+        assert(window.I18n.t('interview-prep') === 'AI工程师面试指南', 'Ch10 title');
+        endGroup();
+
+        // === Test Group 5: Chinese Section Titles ===
+        group('Chinese Translations - Section Titles');
+        assert(window.I18n.t('audio-llm-overview') === '概览与架构演进', 'Audio LLM overview section');
+        assert(window.I18n.t('audio-neglect') === 'Audio Neglect问题', 'Audio neglect section');
+        assert(window.I18n.t('sd-fundamentals') === '基础原理与核心协议', 'SD fundamentals section');
+        assert(window.I18n.t('vllm-architecture') === 'vLLM架构与PagedAttention', 'vLLM architecture section');
+        assert(window.I18n.t('rlvr-fundamentals') === 'GRPO与可验证奖励', 'RLVR fundamentals section');
+        assert(window.I18n.t('ml-fundamentals-interview') === 'ML基础知识', 'Interview ML fundamentals');
+        endGroup();
+
+        // === Test Group 6: Chinese Reading Goals ===
+        group('Chinese Translations - Reading Goals');
+        assert(window.I18n.t('week1') === '第1周：音频AI基础', 'Week 1 goal');
+        assert(window.I18n.t('week2') === '第2周：LLM推理', 'Week 2 goal');
+        assert(window.I18n.t('week3') === '第3周：训练与工程', 'Week 3 goal');
+        assert(window.I18n.t('week4') === '第4周：应用与面试', 'Week 4 goal');
+        endGroup();
+
+        // === Test Group 7: Chinese Part Titles ===
+        group('Chinese Translations - Part Titles');
+        assert(window.I18n.t('part_1') === '音频AI基础', 'Part 1');
+        assert(window.I18n.t('part_2') === 'LLM推理与优化', 'Part 2');
+        assert(window.I18n.t('part_3') === 'ML训练与基础设施', 'Part 3');
+        assert(window.I18n.t('part_4') === '软件工程与职业发展', 'Part 4');
+        endGroup();
+
+        // === Test Group 8: Chinese Content Exists ===
+        group('Chinese Content - TEXTBOOK_ZH Structure');
+        assert(typeof TEXTBOOK_ZH !== 'undefined', 'TEXTBOOK_ZH exists');
+        assert(TEXTBOOK_ZH.parts.length >= 4, 'Has 4+ parts: ' + TEXTBOOK_ZH.parts.length);
+
+        let zhSectionsWithContent = 0;
+        let zhSectionsTotal = 0;
+        TEXTBOOK_ZH.parts.forEach(part => {
+            part.chapters.forEach(ch => {
+                ch.sections.forEach(sec => {
+                    zhSectionsTotal++;
+                    if (sec.content) zhSectionsWithContent++;
+                });
+            });
+        });
+        assert(zhSectionsWithContent >= 3, 'At least 3 sections have Chinese content: ' + zhSectionsWithContent);
+        assert(zhSectionsTotal >= 10, 'At least 10 section stubs exist: ' + zhSectionsTotal);
+        endGroup();
+
+        // === Test Group 9: Chinese Content Quality ===
+        group('Chinese Content Quality Checks');
+        const zhPart1 = TEXTBOOK_ZH.parts[0];
+        const ch1 = zhPart1.chapters[0];
+        const sec1 = ch1.sections[0];
+        assert(sec1.content !== null, 'Ch1 Sec1 has Chinese content');
+        if (sec1.content) {
+            assert(sec1.content.includes('音频大语言模型'), 'Contains "音频大语言模型"');
+            assert(sec1.content.includes('音频编码器'), 'Contains "音频编码器"');
+            assert(sec1.content.includes('核心洞察'), 'Contains "核心洞察" (callout title)');
+            assert(!sec1.content.includes('Audio Large Language Models'), 'Does NOT contain English paragraph text');
+            assert(sec1.content.includes('2023'), 'Contains year references');
+            assert(sec1.content.includes('Pengi'), 'Contains paper names (kept in English)');
+            assert(sec1.content.includes('<table>'), 'Contains HTML table');
+            assert(sec1.content.includes('<div class="callout">'), 'Contains callout divs');
+        }
+        endGroup();
+
+        // === Test Group 10: Language Toggle ===
+        group('Language Toggle');
+        window.I18n.setLang('en');
+        assert(window.I18n.getLang() === 'en', 'Set back to English');
+        assert(window.I18n.t('nav_title') === null, 'English t() returns null');
+
+        window.I18n.toggleLang();
+        assert(window.I18n.getLang() === 'zh', 'Toggle to Chinese');
+        assert(window.I18n.t('nav_title') === 'AI工程师学习手册', 'Chinese after toggle');
+
+        window.I18n.toggleLang();
+        assert(window.I18n.getLang() === 'en', 'Toggle back to English');
+        endGroup();
+
+        // === Test Group 11: Language Persistence ===
+        group('Language Persistence');
+        window.I18n.setLang('zh');
+        assert(localStorage.getItem('lt_language') === 'zh', 'Chinese persisted to localStorage');
+        window.I18n.setLang('en');
+        assert(localStorage.getItem('lt_language') === 'en', 'English persisted to localStorage');
+        endGroup();
+
+        // === Test Group 12: English Content Integrity ===
+        group('English Content Integrity');
+        assert(typeof TEXTBOOK !== 'undefined', 'TEXTBOOK (English) exists');
+        const enParts = TEXTBOOK.parts;
+        assert(enParts.length >= 4, 'Has 4+ parts');
+        let enChapters = 0;
+        let enSections = 0;
+        enParts.forEach(p => {
+            p.chapters.forEach(ch => {
+                enChapters++;
+                ch.sections.forEach(s => {
+                    enSections++;
+                    assert(s.content && s.content.length > 100, `Section ${s.id} has content (${s.content ? s.content.length : 0} chars)`);
+                });
+            });
+        });
+        assert(enChapters >= 10, 'At least 10 English chapters: ' + enChapters);
+        assert(enSections >= 20, 'At least 20 English sections: ' + enSections);
+        endGroup();
+
+        // === Test Group 13: Fallback Behavior ===
+        group('Fallback Behavior');
+        window.I18n.setLang('zh');
+        // Non-existent key should return null (fallback to English)
+        assert(window.I18n.t('nonexistent_key') === null, 'Unknown key returns null for fallback');
+        // Callout titles should have translations
+        assert(window.I18n.t('key_insight') === '核心洞察', 'Callout "key_insight" translated');
+        assert(window.I18n.t('interview_question') === '面试题', 'Callout "interview_question" translated');
+        window.I18n.setLang('en');
+        endGroup();
+
+        // === Summary ===
+        const summaryEl = document.getElementById('summary');
+        const allPass = failed === 0;
+        summaryEl.innerHTML = `
+            <span class="${allPass ? 'pass' : 'fail'}">
+                ${allPass ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}: ${passed}/${total} passed, ${failed} failed
+            </span>
+        `;
+        summaryEl.className = allPass ? 'pass' : 'fail';
+    })();
+    </script>
+</body>
+</html>

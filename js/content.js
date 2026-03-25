@@ -1086,13 +1086,13 @@ class BatchedInferenceServer:
         self.model = model
         self.max_batch_size = max_batch_size
         self.max_wait_ms = max_wait_ms
-        self.queue = asyncio.Queue()
+        self.queue = []
         self._lock = asyncio.Lock()  # Prevent concurrent batch processing
 
     async def predict(self, input_data):
         """Single prediction request - gets batched automatically."""
         future = asyncio.get_event_loop().create_future()
-        await self.queue.put((input_data, future))
+        self.queue.append((input_data, future))
 
         # Use lock to ensure only one batch processes at a time
         async with self._lock:

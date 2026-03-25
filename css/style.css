@@ -706,7 +706,14 @@ body {
     }
 
     .search-container {
-        display: none;
+        display: block;
+        margin: 0 4px;
+    }
+
+    #global-search {
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 0.82rem;
     }
 }
 
