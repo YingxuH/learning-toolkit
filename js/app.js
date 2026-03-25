@@ -14,6 +14,11 @@
     document.addEventListener('DOMContentLoaded', init);
 
     function init() {
+        // Merge expanded content into TEXTBOOK before rendering
+        if (typeof _mergeExpandedContent === 'function') {
+            _mergeExpandedContent();
+        }
+
         applyTheme(state.theme);
         createOverlay();
         renderTOC();
