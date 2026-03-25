@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Highlight Manager Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+        /* Highlight styles needed by the module */
+        .user-highlight { padding: 0 2px; border-radius: 2px; cursor: pointer; }
+        .color-yellow { background: rgba(255,235,59,0.4); }
+        .color-green { background: rgba(76,175,80,0.4); }
+        .color-blue { background: rgba(66,165,245,0.4); }
+        .color-pink { background: rgba(233,30,99,0.3); }
+    </style>
+</head>
+<body>
+    <h1>Highlight Manager Unit Tests</h1>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <!-- Mock DOM elements required by highlights.js -->
+    <div id="content-area" style="display:none;">
+        <div id="textbook-content">
+            <section id="test-section">
+                <p id="test-paragraph">This is some sample text for highlight testing purposes.</p>
+            </section>
+        </div>
+    </div>
+
+    <div id="highlight-toolbar" class="hidden" style="display:none;">
+        <button class="hl-btn" data-color="yellow" title="Yellow"></button>
+        <button class="hl-btn" data-color="green" title="Green"></button>
+        <button class="hl-btn" data-color="blue" title="Blue"></button>
+        <button class="hl-btn" data-color="pink" title="Pink"></button>
+        <button class="hl-btn" id="hl-comment" title="Add Comment"></button>
+        <button class="hl-btn" id="hl-ask-ai" title="Ask AI"></button>
+    </div>
+
+    <!-- Mock Chat Panel for hl-ask-ai -->
+    <div id="chat-panel" class="hidden" style="display:none;"></div>
+
+    <script>
+    // Mock App and dependent modules before loading highlights.js
+    window.App = {
+        toggleChat: function() {}
+    };
+    window.CommentModule = {
+        showCommentModal: function() {},
+        showCommentTooltip: function() {},
+        removeComment: function() {}
+    };
+    window.ChatModule = {
+        setContext: function() {}
+    };
+    </script>
+
+    <script src="../js/highlights.js"></script>
+    <script>
+    (function() {
+        let passed = 0, failed = 0, total = 0;
+        const results = document.getElementById('test-results');
+
+        function assert(condition, testName, details) {
+            total++;
+            const status = condition ? 'PASS' : 'FAIL';
+            if (condition) passed++; else failed++;
+            const cls = condition ? 'pass' : 'fail';
+            results.innerHTML += `<div class="${cls}">[${status}] ${testName}${details && !condition ? ' - ' + details : ''}</div>`;
+        }
+
+        function group(name) {
+            results.innerHTML += `<div class="test-group"><h3>${name}</h3>`;
+        }
+        function endGroup() {
+            results.innerHTML += `</div>`;
+        }
+
+        // === Test Group 1: Module Existence and Exports ===
+        group('Module Existence and Exports');
+        assert(typeof window.HighlightManager !== 'undefined', 'HighlightManager module exists');
+        assert(typeof window.HighlightManager.getHighlights === 'function', 'getHighlights is a function');
+        assert(typeof window.HighlightManager.removeHighlight === 'function', 'removeHighlight is a function');
+        assert(typeof window.HighlightManager.restoreHighlights === 'function', 'restoreHighlights is a function');
+        assert(typeof window.HighlightManager.applyHighlight === 'function', 'applyHighlight is a function');
+        endGroup();
+
+        // === Test Group 2: getHighlights Returns Empty When No Data ===
+        group('getHighlights - Empty State');
+        localStorage.removeItem('lt_highlights');
+        const emptyResult = window.HighlightManager.getHighlights();
+        assert(typeof emptyResult === 'object', 'getHighlights returns an object');
+        assert(Object.keys(emptyResult).length === 0, 'getHighlights returns {} when empty');
+        endGroup();
+
+        // === Test Group 3: getHighlights Returns Stored Data ===
+        group('getHighlights - With Stored Data');
+        const mockData = {
+            'hl-123': { color: 'yellow', text: 'test', timestamp: Date.now(), sectionId: 'sec-1' },
+            'hl-456': { color: 'blue', text: 'another', timestamp: Date.now(), sectionId: 'sec-2' }
+        };
+        localStorage.setItem('lt_highlights', JSON.stringify(mockData));
+        const storedResult = window.HighlightManager.getHighlights();
+        assert(Object.keys(storedResult).length === 2, 'getHighlights returns 2 items after storing 2');
+        assert(storedResult['hl-123'].color === 'yellow', 'First highlight color is yellow');
+        assert(storedResult['hl-456'].color === 'blue', 'Second highlight color is blue');
+        assert(storedResult['hl-123'].text === 'test', 'First highlight text preserved');
+        localStorage.removeItem('lt_highlights');
+        endGroup();
+
+        // === Test Group 4: Storage Key ===
+        group('Storage Key');
+        localStorage.removeItem('lt_highlights');
+        localStorage.setItem('lt_highlights', JSON.stringify({ 'hl-test': { color: 'green', text: 'key test' } }));
+        const keyResult = window.HighlightManager.getHighlights();
+        assert(keyResult['hl-test'] !== undefined, 'Storage key is lt_highlights');
+        assert(keyResult['hl-test'].color === 'green', 'Data retrieved via lt_highlights key');
+        localStorage.removeItem('lt_highlights');
+        endGroup();
+
+        // === Test Group 5: applyHighlight Creates Span ===
+        group('applyHighlight - Span Creation');
+        // Reset state
+        localStorage.removeItem('lt_highlights');
+        const testParagraph = document.getElementById('test-paragraph');
+        testParagraph.innerHTML = 'This is some sample text for highlight testing purposes.';
+
+        // Create a range over "sample text"
+        const textNode = testParagraph.firstChild;
+        const range1 = document.createRange();
+        range1.setStart(textNode, 13); // "sample"
+        range1.setEnd(textNode, 24);   // "sample text"
+
+        const hlId = window.HighlightManager.applyHighlight(range1, 'yellow');
+        assert(hlId !== undefined && hlId !== null, 'applyHighlight returns an ID');
+        assert(typeof hlId === 'string', 'Returned ID is a string');
+        assert(hlId.startsWith('hl-'), 'ID starts with "hl-"');
+
+        const hlSpan = testParagraph.querySelector('.user-highlight');
+        assert(hlSpan !== null, 'Highlight span was created in the DOM');
+        assert(hlSpan.classList.contains('color-yellow'), 'Span has correct color class: color-yellow');
+        assert(hlSpan.textContent === 'sample text', 'Span contains the highlighted text: "' + (hlSpan ? hlSpan.textContent : '') + '"');
+        assert(hlSpan.getAttribute('data-hl-id') === hlId, 'Span has data-hl-id matching returned ID');
+        endGroup();
+
+        // === Test Group 6: All 4 Colors Work ===
+        group('applyHighlight - All Colors');
+        const colors = ['yellow', 'green', 'blue', 'pink'];
+        colors.forEach(color => {
+            // Reset paragraph for each color test
+            testParagraph.innerHTML = 'Color test content here.';
+            localStorage.removeItem('lt_highlights');
+
+            const tn = testParagraph.firstChild;
+            const r = document.createRange();
+            r.setStart(tn, 0);
+            r.setEnd(tn, 10); // "Color test"
+
+            const id = window.HighlightManager.applyHighlight(r, color);
+            const span = testParagraph.querySelector(`.color-${color}`);
+            assert(span !== null, `color-${color} class is applied`);
+            assert(span.classList.contains('user-highlight'), `${color} span has user-highlight class`);
+        });
+        endGroup();
+
+        // === Test Group 7: applyHighlight Saves to localStorage ===
+        group('applyHighlight - localStorage Persistence');
+        localStorage.removeItem('lt_highlights');
+        testParagraph.innerHTML = 'Persistent highlight test text here.';
+
+        const tn2 = testParagraph.firstChild;
+        const r2 = document.createRange();
+        r2.setStart(tn2, 0);
+        r2.setEnd(tn2, 10); // "Persistent"
+
+        const persistId = window.HighlightManager.applyHighlight(r2, 'green');
+        const saved = JSON.parse(localStorage.getItem('lt_highlights') || '{}');
+        assert(saved[persistId] !== undefined, 'Highlight saved to localStorage');
+        assert(saved[persistId].color === 'green', 'Saved color is green');
+        assert(saved[persistId].text === 'Persistent', 'Saved text matches: "' + saved[persistId].text + '"');
+        assert(typeof saved[persistId].timestamp === 'number', 'Saved timestamp is a number');
+        endGroup();
+
+        // === Test Group 8: removeHighlight ===
+        group('removeHighlight');
+        // Start fresh
+        localStorage.removeItem('lt_highlights');
+        testParagraph.innerHTML = 'Remove highlight test text here.';
+
+        const tn3 = testParagraph.firstChild;
+        const r3 = document.createRange();
+        r3.setStart(tn3, 0);
+        r3.setEnd(tn3, 16); // "Remove highlight"
+
+        const removeId = window.HighlightManager.applyHighlight(r3, 'pink');
+        assert(testParagraph.querySelector(`[data-hl-id="${removeId}"]`) !== null, 'Highlight span exists before removal');
+
+        // Verify in localStorage
+        let beforeRemove = JSON.parse(localStorage.getItem('lt_highlights') || '{}');
+        assert(beforeRemove[removeId] !== undefined, 'Highlight in localStorage before removal');
+
+        // Remove it
+        window.HighlightManager.removeHighlight(removeId);
+
+        assert(testParagraph.querySelector(`[data-hl-id="${removeId}"]`) === null, 'Highlight span removed from DOM');
+
+        // Text should be preserved
+        assert(testParagraph.textContent.includes('Remove highlight'), 'Text is preserved after removal: "' + testParagraph.textContent + '"');
+
+        // localStorage should be updated
+        let afterRemove = JSON.parse(localStorage.getItem('lt_highlights') || '{}');
+        assert(afterRemove[removeId] === undefined, 'Highlight removed from localStorage');
+        endGroup();
+
+        // === Test Group 9: Malformed localStorage Data ===
+        group('Graceful Handling of Bad Data');
+        localStorage.setItem('lt_highlights', 'not valid json{{{');
+        const badResult = window.HighlightManager.getHighlights();
+        assert(typeof badResult === 'object', 'Returns object even with malformed JSON');
+        assert(Object.keys(badResult).length === 0, 'Returns empty object for malformed data');
+        localStorage.removeItem('lt_highlights');
+        endGroup();
+
+        // === Test Group 10: restoreHighlights ===
+        group('restoreHighlights');
+        assert(typeof window.HighlightManager.restoreHighlights === 'function', 'restoreHighlights is callable');
+        // Should not throw when called
+        let noError = true;
+        try {
+            window.HighlightManager.restoreHighlights();
+        } catch (e) {
+            noError = false;
+        }
+        assert(noError, 'restoreHighlights does not throw');
+        endGroup();
+
+        // === Cleanup ===
+        localStorage.removeItem('lt_highlights');
+
+        // === Summary ===
+        const summaryEl = document.getElementById('summary');
+        const allPass = failed === 0;
+        summaryEl.innerHTML = `
+            <span class="${allPass ? 'pass' : 'fail'}">
+                ${allPass ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}: ${passed}/${total} passed, ${failed} failed
+            </span>
+        `;
+        summaryEl.className = allPass ? 'pass' : 'fail';
+    })();
+    </script>
+</body>
+</html>

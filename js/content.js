@@ -10,7 +10,9 @@ const TEXTBOOK = {
     { id: "week1", label: "Week 1: Audio AI Foundations", chapters: ["audio-llm-landscape", "speech-to-speech", "tts-technology"] },
     { id: "week2", label: "Week 2: LLM Inference", chapters: ["speculative-decoding", "vllm-serving"] },
     { id: "week3", label: "Week 3: Training & Engineering", chapters: ["rl-training", "ml-engineering"] },
-    { id: "week4", label: "Week 4: Applications & Interview", chapters: ["agent-development", "system-design", "interview-prep"] }
+    { id: "week4", label: "Week 4: Applications & Interview", chapters: ["agent-development", "system-design", "interview-prep"] },
+    { id: "week5", label: "Week 5: Transformer & LLM Fundamentals", chapters: ["transformer-basics", "general-llms"] },
+    { id: "week6", label: "Week 6: Quantization, RAG & DS&A", chapters: ["quantization", "rag-systems", "dsa-for-ai"] }
   ],
   parts: [
     {
@@ -1152,6 +1154,86 @@ class BatchedInferenceServer:
 </ul>
 `
             }
+          ]
+        }
+      ]
+    },
+    {
+      title: "Transformer & LLM Fundamentals",
+      chapters: [
+        {
+          id: "transformer-basics",
+          title: "Transformer Architecture Deep Dive",
+          sections: [
+            { id: "transformer-overview", title: "From RNNs to Attention", content: `<p>Content loading...</p>` },
+            { id: "self-attention", title: "Self-Attention Mechanism", content: `<p>Content loading...</p>` },
+            { id: "positional-encoding", title: "Positional Encoding (RoPE, ALiBi)", content: `<p>Content loading...</p>` },
+            { id: "ffn-architecture", title: "Feed-Forward Networks & SwiGLU", content: `<p>Content loading...</p>` },
+            { id: "normalization", title: "Normalization: LayerNorm, RMSNorm", content: `<p>Content loading...</p>` },
+            { id: "modern-architectures", title: "Modern Architectures (LLaMA, Mistral, MoE)", content: `<p>Content loading...</p>` },
+            { id: "efficient-attention", title: "FlashAttention & GQA", content: `<p>Content loading...</p>` },
+            { id: "transformer-training", title: "Training Transformers", content: `<p>Content loading...</p>` }
+          ]
+        },
+        {
+          id: "general-llms",
+          title: "General LLMs",
+          sections: [
+            { id: "llm-landscape", title: "The LLM Landscape", content: `<p>Content loading...</p>` },
+            { id: "scaling-laws", title: "Scaling Laws & Compute-Optimal Training", content: `<p>Content loading...</p>` },
+            { id: "tokenization", title: "Tokenization Deep Dive (BPE)", content: `<p>Content loading...</p>` },
+            { id: "pretraining", title: "Pretraining: Data & Process", content: `<p>Content loading...</p>` },
+            { id: "finetuning", title: "Fine-Tuning: LoRA, QLoRA, Adapters", content: `<p>Content loading...</p>` },
+            { id: "context-extension", title: "Context Window Extension", content: `<p>Content loading...</p>` },
+            { id: "llm-evaluation", title: "LLM Evaluation", content: `<p>Content loading...</p>` },
+            { id: "llm-practical", title: "Practical LLM Guide", content: `<p>Content loading...</p>` }
+          ]
+        }
+      ]
+    },
+    {
+      title: "Advanced Topics",
+      chapters: [
+        {
+          id: "quantization",
+          title: "Quantization Deep Dive",
+          sections: [
+            { id: "quant-fundamentals", title: "Quantization Fundamentals", content: `<p>Content loading...</p>` },
+            { id: "quant-ptq", title: "GPTQ: Post-Training Quantization", content: `<p>Content loading...</p>` },
+            { id: "quant-awq", title: "AWQ: Activation-Aware Quantization", content: `<p>Content loading...</p>` },
+            { id: "quant-fp8", title: "FP8 Quantization", content: `<p>Content loading...</p>` },
+            { id: "quant-gguf", title: "GGUF & llama.cpp", content: `<p>Content loading...</p>` },
+            { id: "quant-qat", title: "Quantization-Aware Training (QLoRA)", content: `<p>Content loading...</p>` },
+            { id: "quant-benchmarks", title: "Quality vs Speed Benchmarks", content: `<p>Content loading...</p>` },
+            { id: "quant-production", title: "Quantization in Production", content: `<p>Content loading...</p>` }
+          ]
+        },
+        {
+          id: "rag-systems",
+          title: "RAG Systems",
+          sections: [
+            { id: "rag-fundamentals", title: "RAG Fundamentals", content: `<p>Content loading...</p>` },
+            { id: "rag-embeddings", title: "Embedding Models", content: `<p>Content loading...</p>` },
+            { id: "rag-vector-db", title: "Vector Databases", content: `<p>Content loading...</p>` },
+            { id: "rag-chunking", title: "Chunking Strategies", content: `<p>Content loading...</p>` },
+            { id: "rag-retrieval", title: "Retrieval Methods", content: `<p>Content loading...</p>` },
+            { id: "rag-pipeline", title: "Building a RAG Pipeline", content: `<p>Content loading...</p>` },
+            { id: "rag-evaluation", title: "RAG Evaluation", content: `<p>Content loading...</p>` },
+            { id: "rag-advanced", title: "Advanced RAG Patterns", content: `<p>Content loading...</p>` }
+          ]
+        },
+        {
+          id: "dsa-for-ai",
+          title: "Data Structures & Algorithms for AI",
+          sections: [
+            { id: "dsa-tokenizer", title: "Tries & BPE Tokenizers", content: `<p>Content loading...</p>` },
+            { id: "dsa-beam-search", title: "Priority Queues & Beam Search", content: `<p>Content loading...</p>` },
+            { id: "dsa-kv-cache", title: "Hash Tables for KV-Cache", content: `<p>Content loading...</p>` },
+            { id: "dsa-attention", title: "Matrix Ops for Attention", content: `<p>Content loading...</p>` },
+            { id: "dsa-graphs", title: "Graphs for Computation", content: `<p>Content loading...</p>` },
+            { id: "dsa-dp", title: "Dynamic Programming for Sequences", content: `<p>Content loading...</p>` },
+            { id: "dsa-sampling", title: "Sampling Algorithms for LLMs", content: `<p>Content loading...</p>` },
+            { id: "dsa-systems", title: "Systems DS&A", content: `<p>Content loading...</p>` }
           ]
         }
       ]

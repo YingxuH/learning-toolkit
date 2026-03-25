@@ -1,9 +1,10 @@
 /* === Highlight Toolbar === */
 #highlight-toolbar {
-    position: absolute;
+    position: fixed;
     display: flex;
-    gap: 4px;
-    padding: 6px 8px;
+    gap: 6px;
+    padding: 8px 10px;
+    touch-action: manipulation;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
@@ -18,8 +19,10 @@
 }
 
 .hl-btn {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     border-radius: 50%;
     border: 2px solid var(--border-color);
     cursor: pointer;

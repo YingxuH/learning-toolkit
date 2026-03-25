@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI Engineer Learning Toolkit - Test Runner</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        h1 { color: #6c8aff; margin-bottom: 8px; }
+        .subtitle { color: #999; margin-bottom: 32px; }
+        .test-list { list-style: none; padding: 0; }
+        .test-list li { margin: 12px 0; }
+        .test-list a {
+            color: #8ab4f8;
+            text-decoration: none;
+            display: inline-block;
+            padding: 10px 16px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .test-list a:hover {
+            background: #2a2a4e;
+            border-color: #6c8aff;
+        }
+        .test-desc { color: #aaa; font-size: 0.9em; margin-left: 8px; }
+        footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #333; color: #666; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <h1>AI Engineer Learning Toolkit - Test Suite</h1>
+    <p class="subtitle">Open each test file in a browser to run its unit tests.</p>
+
+    <ul class="test-list">
+        <li>
+            <a href="test_bilingual.html">test_bilingual.html</a>
+            <span class="test-desc">-- I18n module, Chinese translations, content structure, language toggle</span>
+        </li>
+        <li>
+            <a href="test_highlights.html">test_highlights.html</a>
+            <span class="test-desc">-- HighlightManager: apply, remove, colors, localStorage persistence</span>
+        </li>
+        <li>
+            <a href="test_search.html">test_search.html</a>
+            <span class="test-desc">-- Search module: query matching, case insensitivity, special chars, result limits</span>
+        </li>
+        <li>
+            <a href="test_comments.html">test_comments.html</a>
+            <span class="test-desc">-- CommentModule: save, retrieve, remove, modal, tooltip</span>
+        </li>
+        <li>
+            <a href="test_chat.html">test_chat.html</a>
+            <span class="test-desc">-- ChatModule: context banner, API key, localStorage keys, UI elements</span>
+        </li>
+    </ul>
+
+    <footer>
+        All tests are self-contained HTML files. No npm or build tools required.
+    </footer>
+</body>
+</html>

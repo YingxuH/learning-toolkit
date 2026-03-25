@@ -1,0 +1,18 @@
+{
+  "name": "learning-toolkit-functions",
+  "description": "Firebase Cloud Functions for Learning Toolkit AI chat",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "@google/generative-ai": "^0.21.0",
+    "cors": "^2.8.5"
+  }
+}

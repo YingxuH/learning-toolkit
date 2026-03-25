@@ -58,6 +58,24 @@ function _mergeExpandedContent() {
             merge('interview-prep', CONTENT_CH9_10.ch10_sections);
         }
     } catch(e) {}
+    // New chapters
+    try {
+        if (typeof CONTENT_CH11_12 !== 'undefined') {
+            merge('transformer-basics', CONTENT_CH11_12.ch11_sections);
+            merge('general-llms', CONTENT_CH11_12.ch12_sections);
+        }
+    } catch(e) {}
+    try {
+        if (typeof CONTENT_CH13_14 !== 'undefined') {
+            merge('quantization', CONTENT_CH13_14.ch13_sections);
+            merge('rag-systems', CONTENT_CH13_14.ch14_sections);
+        }
+    } catch(e) {}
+    try {
+        if (typeof CONTENT_CH15 !== 'undefined') {
+            merge('dsa-for-ai', CONTENT_CH15.ch15_sections);
+        }
+    } catch(e) {}
 }
 
 _mergeExpandedContent();

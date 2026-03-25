@@ -88,57 +88,72 @@
     }
 
     async function getAIResponse(userMessage) {
-        // Try to use API key if stored
-        const apiKey = localStorage.getItem(API_KEY_KEY);
-
-        // Build system prompt with memory
         const systemPrompt = buildSystemPrompt();
 
         // Build messages array with recent history
-        const messages = [
-            { role: 'system', content: systemPrompt }
-        ];
-
-        // Add recent conversation history (last 10 exchanges)
+        const messages = [];
         const recentHistory = conversationHistory.slice(-20);
         recentHistory.forEach(msg => {
             messages.push({ role: msg.role, content: msg.content });
         });
-
         messages.push({ role: 'user', content: userMessage });
 
-        if (apiKey) {
-            // Try Anthropic API
+        // Strategy 1: Try Gemini via Firebase Cloud Function (requires auth)
+        if (window.AuthModule && window.AuthModule.getUser()) {
             try {
-                const resp = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': apiKey,
-                        'anthropic-version': '2023-06-01',
-                        'anthropic-dangerous-direct-browser-access': 'true'
-                    },
-                    body: JSON.stringify({
-                        model: 'claude-sonnet-4-20250514',
-                        max_tokens: 1024,
-                        system: systemPrompt,
-                        messages: messages.filter(m => m.role !== 'system').map(m => ({
-                            role: m.role,
-                            content: m.content
-                        }))
-                    })
-                });
+                const token = await window.AuthModule.getIdToken();
+                if (token && typeof GEMINI_FUNCTION_URL !== 'undefined') {
+                    const resp = await fetch(GEMINI_FUNCTION_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({
+                            messages: messages,
+                            systemPrompt: systemPrompt,
+                            context: chatContext || null
+                        })
+                    });
 
-                if (resp.ok) {
-                    const data = await resp.json();
-                    return data.content[0].text;
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        return data.response;
+                    } else {
+                        const err = await resp.json().catch(() => ({}));
+                        console.warn('[Chat] Gemini API error:', err.error || resp.status);
+                    }
                 }
             } catch (e) {
-                console.log('API call failed, using local response');
+                console.warn('[Chat] Cloud function call failed:', e.message);
             }
         }
 
-        // Fallback to local intelligent response
+        // Strategy 2: Try direct Gemini API (for development/testing)
+        const geminiKey = typeof FIREBASE_CONFIG !== 'undefined' ? null : localStorage.getItem(API_KEY_KEY);
+        if (geminiKey) {
+            try {
+                const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=' + geminiKey, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        system_instruction: { parts: [{ text: systemPrompt }] },
+                        contents: messages.map(m => ({
+                            role: m.role === 'assistant' ? 'model' : 'user',
+                            parts: [{ text: m.content }]
+                        }))
+                    })
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    return data.candidates[0].content.parts[0].text;
+                }
+            } catch (e) {
+                console.warn('[Chat] Direct Gemini call failed:', e.message);
+            }
+        }
+
+        // Strategy 3: Fallback to local intelligent response
         return getLocalResponse(userMessage);
     }
 

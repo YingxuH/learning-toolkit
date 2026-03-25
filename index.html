@@ -24,6 +24,13 @@
             </div>
         </div>
         <div class="nav-right">
+            <!-- Auth UI -->
+            <button id="auth-signin" class="nav-btn auth-btn" title="Sign In with Google">Sign In</button>
+            <div id="auth-user-info" class="auth-user-info hidden">
+                <img id="auth-user-avatar" class="auth-avatar" alt="" src="">
+                <span id="auth-user-name" class="auth-name"></span>
+                <button id="auth-signout" class="nav-btn auth-btn-small" title="Sign Out">Out</button>
+            </div>
             <button id="lang-toggle" class="nav-btn lang-btn" title="Switch Language">EN</button>
             <button id="theme-toggle" class="nav-btn" title="Toggle Theme">&#9789;</button>
             <button id="chat-toggle" class="nav-btn" title="AI Assistant (Ctrl+/)">&#128172;</button>
@@ -89,7 +96,15 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Firebase SDK (loaded from CDN - no build step needed) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/user-data.js"></script>
     <script src="js/i18n.js"></script>
     <script src="js/content.js"></script>
     <script src="js/content-zh.js"></script>

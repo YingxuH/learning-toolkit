@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Comment Module Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Comment Module Unit Tests</h1>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <!-- Mock DOM elements required by comments.js -->
+    <div id="comment-modal" class="modal hidden" style="display:none;">
+        <div class="modal-content">
+            <h3>Add Comment</h3>
+            <textarea id="comment-text" placeholder="Write your comment..." rows="4"></textarea>
+            <div class="modal-actions">
+                <button id="comment-save" class="btn-primary">Save</button>
+                <button id="comment-cancel" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mock highlight elements for tooltip tests -->
+    <div id="mock-highlights" style="display:none;">
+        <span class="user-highlight" data-hl-id="hl-tooltip-test">Highlighted text</span>
+    </div>
+
+    <script>
+    // Mock HighlightManager before loading comments.js
+    window.HighlightManager = {
+        removeHighlight: function() {}
+    };
+    </script>
+
+    <script src="../js/comments.js"></script>
+    <script>
+    (function() {
+        let passed = 0, failed = 0, total = 0;
+        const results = document.getElementById('test-results');
+
+        function assert(condition, testName, details) {
+            total++;
+            const status = condition ? 'PASS' : 'FAIL';
+            if (condition) passed++; else failed++;
+            const cls = condition ? 'pass' : 'fail';
+            results.innerHTML += `<div class="${cls}">[${status}] ${testName}${details && !condition ? ' - ' + details : ''}</div>`;
+        }
+
+        function group(name) {
+            results.innerHTML += `<div class="test-group"><h3>${name}</h3>`;
+        }
+        function endGroup() {
+            results.innerHTML += `</div>`;
+        }
+
+        // === Test Group 1: Module Existence and Exports ===
+        group('Module Existence and Exports');
+        assert(typeof window.CommentModule !== 'undefined', 'CommentModule exists');
+        assert(typeof window.CommentModule.showCommentModal === 'function', 'showCommentModal is a function');
+        assert(typeof window.CommentModule.showCommentTooltip === 'function', 'showCommentTooltip is a function');
+        assert(typeof window.CommentModule.removeComment === 'function', 'removeComment is a function');
+        assert(typeof window.CommentModule.getComments === 'function', 'getComments is a function');
+        endGroup();
+
+        // === Test Group 2: getComments Returns Empty When No Data ===
+        group('getComments - Empty State');
+        localStorage.removeItem('lt_comments');
+        const emptyResult = window.CommentModule.getComments();
+        assert(typeof emptyResult === 'object', 'getComments returns an object');
+        assert(Object.keys(emptyResult).length === 0, 'getComments returns {} when empty');
+        endGroup();
+
+        // === Test Group 3: Storage Key ===
+        group('Storage Key');
+        localStorage.removeItem('lt_comments');
+        const testComment = { 'hl-key-test': { text: 'testing storage key', timestamp: Date.now() } };
+        localStorage.setItem('lt_comments', JSON.stringify(testComment));
+        const keyResult = window.CommentModule.getComments();
+        assert(keyResult['hl-key-test'] !== undefined, 'Storage key is lt_comments');
+        assert(keyResult['hl-key-test'].text === 'testing storage key', 'Comment text retrieved correctly');
+        localStorage.removeItem('lt_comments');
+        endGroup();
+
+        // === Test Group 4: Saving a Comment via localStorage ===
+        group('getComments - With Stored Data');
+        localStorage.removeItem('lt_comments');
+        const mockComments = {
+            'hl-001': { text: 'This is my first comment', timestamp: 1700000000000 },
+            'hl-002': { text: 'Second comment here', timestamp: 1700000001000 },
+            'hl-003': { text: 'Third note', timestamp: 1700000002000 }
+        };
+        localStorage.setItem('lt_comments', JSON.stringify(mockComments));
+        const storedResult = window.CommentModule.getComments();
+        assert(Object.keys(storedResult).length === 3, 'getComments returns 3 items after storing 3');
+        assert(storedResult['hl-001'].text === 'This is my first comment', 'First comment text matches');
+        assert(storedResult['hl-002'].text === 'Second comment here', 'Second comment text matches');
+        assert(storedResult['hl-003'].text === 'Third note', 'Third comment text matches');
+        assert(typeof storedResult['hl-001'].timestamp === 'number', 'Timestamp is a number');
+        localStorage.removeItem('lt_comments');
+        endGroup();
+
+        // === Test Group 5: removeComment ===
+        group('removeComment');
+        localStorage.removeItem('lt_comments');
+        // Set up data with multiple comments
+        const preRemove = {
+            'hl-rm-1': { text: 'Keep me', timestamp: Date.now() },
+            'hl-rm-2': { text: 'Remove me', timestamp: Date.now() },
+            'hl-rm-3': { text: 'Keep me too', timestamp: Date.now() }
+        };
+        localStorage.setItem('lt_comments', JSON.stringify(preRemove));
+
+        // Verify all 3 exist
+        assert(Object.keys(window.CommentModule.getComments()).length === 3, '3 comments before removal');
+
+        // Remove one
+        window.CommentModule.removeComment('hl-rm-2');
+
+        const afterRemove = window.CommentModule.getComments();
+        assert(Object.keys(afterRemove).length === 2, '2 comments after removing one');
+        assert(afterRemove['hl-rm-2'] === undefined, 'Removed comment is gone');
+        assert(afterRemove['hl-rm-1'] !== undefined, 'Other comment hl-rm-1 still exists');
+        assert(afterRemove['hl-rm-3'] !== undefined, 'Other comment hl-rm-3 still exists');
+        assert(afterRemove['hl-rm-1'].text === 'Keep me', 'Remaining comment text is intact');
+
+        // Verify localStorage was updated
+        const rawStorage = JSON.parse(localStorage.getItem('lt_comments'));
+        assert(rawStorage['hl-rm-2'] === undefined, 'localStorage also updated after removal');
+        localStorage.removeItem('lt_comments');
+        endGroup();
+
+        // === Test Group 6: removeComment on Non-Existent ID ===
+        group('removeComment - Non-Existent ID');
+        localStorage.removeItem('lt_comments');
+        localStorage.setItem('lt_comments', JSON.stringify({ 'hl-safe': { text: 'safe', timestamp: 1 } }));
+        let noError = true;
+        try {
+            window.CommentModule.removeComment('hl-nonexistent');
+        } catch (e) {
+            noError = false;
+        }
+        assert(noError, 'removeComment on non-existent ID does not throw');
+        const afterBadRemove = window.CommentModule.getComments();
+        assert(afterBadRemove['hl-safe'] !== undefined, 'Existing comments preserved after bad removal');
+        localStorage.removeItem('lt_comments');
+        endGroup();
+
+        // === Test Group 7: showCommentModal ===
+        group('showCommentModal');
+        localStorage.removeItem('lt_comments');
+        const modal = document.getElementById('comment-modal');
+        const commentText = document.getElementById('comment-text');
+
+        // Modal should start hidden
+        assert(modal.classList.contains('hidden'), 'Modal starts hidden');
+
+        // Call showCommentModal
+        window.CommentModule.showCommentModal('hl-modal-test');
+        assert(!modal.classList.contains('hidden'), 'Modal is shown after showCommentModal');
+        assert(commentText.value === '', 'Text area is empty for new comment');
+
+        // Re-hide modal
+        modal.classList.add('hidden');
+
+        // Test with existing comment
+        localStorage.setItem('lt_comments', JSON.stringify({
+            'hl-modal-existing': { text: 'Pre-existing comment', timestamp: Date.now() }
+        }));
+        window.CommentModule.showCommentModal('hl-modal-existing');
+        assert(commentText.value === 'Pre-existing comment', 'Text area pre-filled for existing comment: "' + commentText.value + '"');
+        modal.classList.add('hidden');
+        localStorage.removeItem('lt_comments');
+        endGroup();
+
+        // === Test Group 8: showCommentTooltip ===
+        group('showCommentTooltip');
+        localStorage.removeItem('lt_comments');
+        // Store a comment for the tooltip
+        localStorage.setItem('lt_comments', JSON.stringify({
+            'hl-tooltip-test': { text: 'Tooltip comment', timestamp: 1700000000000 }
+        }));
+
+        // Call showCommentTooltip
+        window.CommentModule.showCommentTooltip('hl-tooltip-test', 100, 200);
+        const tooltip = document.querySelector('.comment-tooltip');
+        assert(tooltip !== null, 'Tooltip element was created');
+        if (tooltip) {
+            assert(tooltip.textContent.includes('Tooltip comment'), 'Tooltip shows comment text');
+            assert(tooltip.querySelector('.edit-comment') !== null, 'Tooltip has edit button');
+            assert(tooltip.querySelector('.delete-comment') !== null, 'Tooltip has delete button');
+            // Clean up
+            tooltip.remove();
+        }
+        localStorage.removeItem('lt_comments');
+        endGroup();
+
+        // === Test Group 9: showCommentTooltip Without Comment ===
+        group('showCommentTooltip - No Existing Comment');
+        localStorage.removeItem('lt_comments');
+
+        window.CommentModule.showCommentTooltip('hl-no-comment', 150, 250);
+        const tooltipNoComment = document.querySelector('.comment-tooltip');
+        assert(tooltipNoComment !== null, 'Tooltip created even without existing comment');
+        if (tooltipNoComment) {
+            assert(tooltipNoComment.textContent.includes('Highlighted text'), 'Shows "Highlighted text" for no-comment highlight');
+            assert(tooltipNoComment.textContent.includes('Add Comment'), 'Shows "Add Comment" option');
+            tooltipNoComment.remove();
+        }
+        localStorage.removeItem('lt_comments');
+        endGroup();
+
+        // === Test Group 10: Malformed localStorage Data ===
+        group('Graceful Handling of Bad Data');
+        localStorage.setItem('lt_comments', '{{invalid json!!!');
+        const badResult = window.CommentModule.getComments();
+        assert(typeof badResult === 'object', 'Returns object even with malformed JSON');
+        assert(Object.keys(badResult).length === 0, 'Returns empty object for malformed data');
+        localStorage.removeItem('lt_comments');
+        endGroup();
+
+        // === Cleanup ===
+        localStorage.removeItem('lt_comments');
+
+        // === Summary ===
+        const summaryEl = document.getElementById('summary');
+        const allPass = failed === 0;
+        summaryEl.innerHTML = `
+            <span class="${allPass ? 'pass' : 'fail'}">
+                ${allPass ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}: ${passed}/${total} passed, ${failed} failed
+            </span>
+        `;
+        summaryEl.className = allPass ? 'pass' : 'fail';
+    })();
+    </script>
+</body>
+</html>

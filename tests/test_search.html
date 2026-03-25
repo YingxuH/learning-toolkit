@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Search Module Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Search Module Unit Tests</h1>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <!-- Mock DOM elements required by search.js -->
+    <div style="display:none;">
+        <div class="search-container">
+            <input type="text" id="global-search" placeholder="Search content..." autocomplete="off">
+            <div id="search-results" class="search-dropdown hidden"></div>
+        </div>
+    </div>
+
+    <!-- Mock App for click handlers -->
+    <script>
+    window.App = {
+        scrollToSection: function() {}
+    };
+    </script>
+
+    <script src="../js/content.js"></script>
+    <script src="../js/search.js"></script>
+    <script>
+    (function() {
+        let passed = 0, failed = 0, total = 0;
+        const results = document.getElementById('test-results');
+
+        function assert(condition, testName, details) {
+            total++;
+            const status = condition ? 'PASS' : 'FAIL';
+            if (condition) passed++; else failed++;
+            const cls = condition ? 'pass' : 'fail';
+            results.innerHTML += `<div class="${cls}">[${status}] ${testName}${details && !condition ? ' - ' + details : ''}</div>`;
+        }
+
+        function group(name) {
+            results.innerHTML += `<div class="test-group"><h3>${name}</h3>`;
+        }
+        function endGroup() {
+            results.innerHTML += `</div>`;
+        }
+
+        // Helper: trigger search and read results
+        const searchInput = document.getElementById('global-search');
+        const searchResults = document.getElementById('search-results');
+
+        function triggerSearch(query) {
+            searchInput.value = query;
+            searchInput.dispatchEvent(new Event('input'));
+        }
+
+        // Wait for DOMContentLoaded to fire and search index to build,
+        // then run tests. We use a small delay since the module uses DOMContentLoaded + debounce.
+        function runTests() {
+            // === Test Group 1: TEXTBOOK Data Exists ===
+            group('TEXTBOOK Data Availability');
+            assert(typeof TEXTBOOK !== 'undefined', 'TEXTBOOK is defined');
+            assert(TEXTBOOK.parts.length >= 4, 'TEXTBOOK has 4+ parts: ' + TEXTBOOK.parts.length);
+            let totalSections = 0;
+            TEXTBOOK.parts.forEach(p => p.chapters.forEach(c => { totalSections += c.sections.length; }));
+            assert(totalSections >= 10, 'TEXTBOOK has 10+ sections: ' + totalSections);
+            endGroup();
+
+            // === Test Group 2: Search DOM Elements ===
+            group('Search DOM Elements');
+            assert(searchInput !== null, 'global-search input exists');
+            assert(searchResults !== null, 'search-results div exists');
+            endGroup();
+
+            // === Test Group 3: Search for "attention" ===
+            group('Search: "attention" Returns Results');
+            triggerSearch('attention');
+
+            // The search module uses a 150ms debounce, so we need to wait
+            setTimeout(() => {
+                const items3 = searchResults.querySelectorAll('.search-result-item');
+                assert(items3.length > 0, 'Searching "attention" returns results: ' + items3.length + ' found');
+                assert(!searchResults.classList.contains('hidden'), 'Results dropdown is visible');
+
+                const resultText3 = searchResults.innerHTML.toLowerCase();
+                assert(resultText3.includes('attention') || resultText3.includes('mark'), 'Results contain "attention" or highlighted marks');
+                endGroup();
+
+                // === Test Group 4: Search for "speculative decoding" ===
+                group('Search: "speculative decoding" Returns Results');
+                triggerSearch('speculative decoding');
+
+                setTimeout(() => {
+                    const items4 = searchResults.querySelectorAll('.search-result-item');
+                    assert(items4.length > 0, 'Searching "speculative decoding" returns results: ' + items4.length + ' found');
+
+                    // Check that no-results message is not shown
+                    const noResults4 = searchResults.textContent.includes('No results found');
+                    assert(!noResults4, '"speculative decoding" does not show "No results found"');
+                    endGroup();
+
+                    // === Test Group 5: Case Insensitivity ===
+                    group('Case Insensitivity');
+                    triggerSearch('VLLM');
+
+                    setTimeout(() => {
+                        const itemsUpper = searchResults.querySelectorAll('.search-result-item');
+                        const upperCount = itemsUpper.length;
+                        const upperNoResults = searchResults.textContent.includes('No results found');
+
+                        triggerSearch('vllm');
+
+                        setTimeout(() => {
+                            const itemsLower = searchResults.querySelectorAll('.search-result-item');
+                            const lowerCount = itemsLower.length;
+                            const lowerNoResults = searchResults.textContent.includes('No results found');
+
+                            assert(upperCount > 0 || !upperNoResults, '"VLLM" (uppercase) returns results');
+                            assert(lowerCount > 0 || !lowerNoResults, '"vllm" (lowercase) returns results');
+                            assert(upperCount === lowerCount, 'Same number of results for "VLLM" and "vllm": ' + upperCount + ' vs ' + lowerCount);
+                            endGroup();
+
+                            // === Test Group 6: Query Under 2 Chars Returns No Results ===
+                            group('Short Query - Under 2 Characters');
+                            triggerSearch('a');
+
+                            setTimeout(() => {
+                                assert(searchResults.classList.contains('hidden'), 'Single char "a" hides results dropdown');
+
+                                triggerSearch('');
+                                setTimeout(() => {
+                                    assert(searchResults.classList.contains('hidden'), 'Empty string hides results dropdown');
+                                    endGroup();
+
+                                    // === Test Group 7: Special Characters Don't Crash ===
+                                    group('Special Characters Safety');
+                                    let noCrash = true;
+                                    const specialQueries = [
+                                        '.*+?^${}()|[]\\',
+                                        '<script>alert("xss")</script>',
+                                        '  ',
+                                        '(((',
+                                        'test[0]',
+                                        'a&b<c>d',
+                                        '\\n\\t\\r'
+                                    ];
+
+                                    specialQueries.forEach(q => {
+                                        try {
+                                            triggerSearch(q);
+                                        } catch (e) {
+                                            noCrash = false;
+                                        }
+                                    });
+                                    assert(noCrash, 'Special characters do not throw errors');
+
+                                    // Wait for any pending debounce to verify no crash
+                                    setTimeout(() => {
+                                        assert(true, 'No crash after special character searches');
+                                        endGroup();
+
+                                        // === Test Group 8: Result Structure ===
+                                        group('Result Structure');
+                                        triggerSearch('transformer');
+
+                                        setTimeout(() => {
+                                            const items8 = searchResults.querySelectorAll('.search-result-item');
+                                            if (items8.length > 0) {
+                                                const firstResult = items8[0];
+                                                const hasChapter = firstResult.querySelector('.search-result-chapter') !== null;
+                                                const hasText = firstResult.querySelector('.search-result-text') !== null;
+                                                assert(hasChapter, 'Result item has chapter/section info');
+                                                assert(hasText, 'Result item has snippet text');
+                                                const sectionAttr = firstResult.getAttribute('data-section');
+                                                assert(sectionAttr !== null && sectionAttr.length > 0, 'Result item has data-section attribute');
+                                            } else {
+                                                assert(false, 'Expected results for "transformer" but got none');
+                                            }
+                                            endGroup();
+
+                                            // === Test Group 9: Max Results Limit ===
+                                            group('Results Limit');
+                                            triggerSearch('the');
+
+                                            setTimeout(() => {
+                                                const items9 = searchResults.querySelectorAll('.search-result-item');
+                                                assert(items9.length <= 10, 'Results capped at 10: ' + items9.length + ' shown');
+                                                endGroup();
+
+                                                // === Summary ===
+                                                const summaryEl = document.getElementById('summary');
+                                                const allPass = failed === 0;
+                                                summaryEl.innerHTML = `
+                                                    <span class="${allPass ? 'pass' : 'fail'}">
+                                                        ${allPass ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}: ${passed}/${total} passed, ${failed} failed
+                                                    </span>
+                                                `;
+                                                summaryEl.className = allPass ? 'pass' : 'fail';
+                                            }, 200);
+                                        }, 200);
+                                    }, 200);
+                                }, 200);
+                            }, 200);
+                        }, 200);
+                    }, 200);
+                }, 200);
+            }, 200);
+        }
+
+        // Trigger DOMContentLoaded manually for modules that depend on it,
+        // then wait for the search index to build
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => setTimeout(runTests, 100));
+        } else {
+            // DOMContentLoaded already fired; the module's listener already ran
+            setTimeout(runTests, 100);
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -14,16 +14,15 @@
     function setupHighlighting() {
         const contentArea = document.getElementById('content-area');
 
-        // Show toolbar on text selection
-        contentArea.addEventListener('mouseup', (e) => {
+        // Shared handler for both mouse and touch selection
+        function handleSelectionEnd(clientX, clientY) {
             setTimeout(() => {
                 const selection = window.getSelection();
-                if (selection.isCollapsed || selection.toString().trim().length === 0) {
+                if (!selection || selection.isCollapsed || selection.toString().trim().length === 0) {
                     hideToolbar();
                     return;
                 }
 
-                // Only highlight within textbook content
                 const range = selection.getRangeAt(0);
                 if (!document.getElementById('textbook-content').contains(range.commonAncestorContainer)) {
                     return;
@@ -31,20 +30,63 @@
 
                 currentSelection = selection.toString();
                 currentRange = range.cloneRange();
-                showToolbar(e.clientX, e.clientY);
-            }, 10);
+                showToolbar(clientX, clientY);
+            }, 300); // Longer delay for touch to let selection finalize
+        }
+
+        // Desktop: mouseup
+        contentArea.addEventListener('mouseup', (e) => {
+            handleSelectionEnd(e.clientX, e.clientY);
         });
 
-        // Hide toolbar on click elsewhere
+        // Mobile: touchend
+        contentArea.addEventListener('touchend', (e) => {
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                const touch = e.changedTouches[0];
+                handleSelectionEnd(touch.clientX, touch.clientY);
+            }
+        });
+
+        // Also listen for selectionchange (works better on some mobile browsers)
+        let selectionChangeTimer = null;
+        document.addEventListener('selectionchange', () => {
+            clearTimeout(selectionChangeTimer);
+            selectionChangeTimer = setTimeout(() => {
+                const selection = window.getSelection();
+                if (!selection || selection.isCollapsed || selection.toString().trim().length === 0) {
+                    return;
+                }
+                const range = selection.getRangeAt(0);
+                if (!document.getElementById('textbook-content').contains(range.commonAncestorContainer)) {
+                    return;
+                }
+                currentSelection = selection.toString();
+                currentRange = range.cloneRange();
+                // Position toolbar near the selection
+                const rect = range.getBoundingClientRect();
+                if (rect.width > 0) {
+                    showToolbar(rect.left + rect.width / 2, rect.top);
+                }
+            }, 500);
+        });
+
+        // Hide toolbar on click/tap elsewhere
         document.addEventListener('mousedown', (e) => {
             if (!e.target.closest('#highlight-toolbar') && !e.target.closest('.user-highlight')) {
                 hideToolbar();
             }
         });
+        document.addEventListener('touchstart', (e) => {
+            if (!e.target.closest('#highlight-toolbar') && !e.target.closest('.user-highlight')) {
+                hideToolbar();
+            }
+        }, { passive: true });
 
         // Color buttons
         toolbar.querySelectorAll('[data-color]').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (currentRange) {
                     applyHighlight(currentRange, btn.getAttribute('data-color'));
                     hideToolbar();
@@ -53,9 +95,10 @@
         });
 
         // Ask AI button
-        document.getElementById('hl-ask-ai').addEventListener('click', () => {
+        document.getElementById('hl-ask-ai').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (currentSelection) {
-                // Open chat with context
                 const chatPanel = document.getElementById('chat-panel');
                 if (chatPanel.classList.contains('hidden')) {
                     App.toggleChat();
@@ -67,7 +110,9 @@
         });
 
         // Comment button
-        document.getElementById('hl-comment').addEventListener('click', () => {
+        document.getElementById('hl-comment').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (currentSelection && currentRange) {
                 const highlightId = applyHighlight(currentRange, 'yellow');
                 hideToolbar();
@@ -78,12 +123,12 @@
 
     function showToolbar(x, y) {
         toolbar.classList.remove('hidden');
-        const contentArea = document.getElementById('content-area');
-        const contentRect = contentArea.getBoundingClientRect();
-
-        // Position relative to viewport
-        toolbar.style.left = Math.min(x - 80, window.innerWidth - 220) + 'px';
-        toolbar.style.top = (y - 50) + 'px';
+        // Use fixed positioning for consistent behavior on desktop and mobile
+        const toolbarWidth = 220;
+        const left = Math.max(8, Math.min(x - toolbarWidth / 2, window.innerWidth - toolbarWidth - 8));
+        const top = Math.max(8, y - 56);
+        toolbar.style.left = left + 'px';
+        toolbar.style.top = top + 'px';
     }
 
     function hideToolbar() {
@@ -99,13 +144,9 @@
             span.setAttribute('data-hl-id', id);
             range.surroundContents(span);
 
-            // Save
-            saveHighlight(id, color, range);
-
-            // Clear selection
+            saveHighlight(id, color);
             window.getSelection().removeAllRanges();
 
-            // Add click handler for showing comment
             span.addEventListener('click', (e) => {
                 e.stopPropagation();
                 window.CommentModule.showCommentTooltip(id, e.clientX, e.clientY);
@@ -113,8 +154,6 @@
 
             return id;
         } catch (e) {
-            // surroundContents fails on partial element selections
-            // Fallback: wrap text nodes individually
             const fragment = range.extractContents();
             const wrapper = document.createElement('span');
             wrapper.className = `user-highlight color-${color}`;
@@ -122,7 +161,7 @@
             wrapper.appendChild(fragment);
             range.insertNode(wrapper);
 
-            saveHighlight(id, color, range);
+            saveHighlight(id, color);
             window.getSelection().removeAllRanges();
 
             wrapper.addEventListener('click', (e) => {
@@ -142,7 +181,6 @@
                 color: color,
                 text: el.textContent,
                 timestamp: Date.now(),
-                // Store location info for restoration
                 sectionId: el.closest('section[id]')?.id || el.closest('.chapter')?.id || ''
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(highlights));
@@ -169,21 +207,19 @@
         const highlights = getHighlights();
         delete highlights[id];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(highlights));
-
-        // Also remove comment
         window.CommentModule.removeComment(id);
     }
 
     function restoreHighlights() {
-        // Highlights are stored but restoration from plain text is complex
-        // For now, highlights persist via DOM until content is re-rendered
+        // Highlights persist via DOM until content is re-rendered
     }
 
-    // Export
+    // Export (including test helpers)
     window.HighlightManager = {
         getHighlights,
         removeHighlight,
         restoreHighlights,
-        applyHighlight
+        applyHighlight,
+        _test_saveHighlight: saveHighlight
     };
 })();

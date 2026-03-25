@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Module Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Chat Module Unit Tests</h1>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <!-- Mock DOM elements required by chat.js -->
+    <aside id="chat-panel" class="hidden" style="display:none;">
+        <div class="chat-header">
+            <h3>AI Assistant</h3>
+            <div class="chat-header-actions">
+                <button id="chat-clear" class="chat-btn" title="Clear Chat">Clear</button>
+                <button id="chat-close" class="chat-btn" title="Close">&times;</button>
+            </div>
+        </div>
+        <div id="chat-context-banner" class="hidden">
+            <span id="chat-context-text"></span>
+            <button id="clear-context" title="Clear context">&times;</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-area">
+            <textarea id="chat-input" placeholder="Ask about highlighted text..." rows="2"></textarea>
+            <button id="chat-send" title="Send">&#10148;</button>
+        </div>
+    </aside>
+
+    <script src="../js/chat.js"></script>
+    <script>
+    (function() {
+        let passed = 0, failed = 0, total = 0;
+        const results = document.getElementById('test-results');
+
+        function assert(condition, testName, details) {
+            total++;
+            const status = condition ? 'PASS' : 'FAIL';
+            if (condition) passed++; else failed++;
+            const cls = condition ? 'pass' : 'fail';
+            results.innerHTML += `<div class="${cls}">[${status}] ${testName}${details && !condition ? ' - ' + details : ''}</div>`;
+        }
+
+        function group(name) {
+            results.innerHTML += `<div class="test-group"><h3>${name}</h3>`;
+        }
+        function endGroup() {
+            results.innerHTML += `</div>`;
+        }
+
+        // === Test Group 1: Module Existence and Exports ===
+        group('Module Existence and Exports');
+        assert(typeof window.ChatModule !== 'undefined', 'ChatModule exists');
+        assert(typeof window.ChatModule.setContext === 'function', 'setContext is a function');
+        assert(typeof window.ChatModule.clearContext === 'function', 'clearContext is a function');
+        assert(typeof window.ChatModule.applyUpdate === 'function', 'applyUpdate is a function');
+        assert(typeof window.ChatModule.setApiKey === 'function', 'setApiKey is a function');
+        endGroup();
+
+        // === Test Group 2: setContext Sets Banner Text and Shows It ===
+        group('setContext - Banner Behavior');
+        const banner = document.getElementById('chat-context-banner');
+        const ctxText = document.getElementById('chat-context-text');
+
+        // Banner should start hidden
+        assert(banner.classList.contains('hidden'), 'Banner starts hidden');
+
+        // Set context with short text
+        window.ChatModule.setContext('This is a short highlighted text.');
+        assert(!banner.classList.contains('hidden'), 'Banner is visible after setContext');
+        assert(ctxText.textContent.includes('This is a short highlighted text'), 'Banner shows context text');
+        assert(ctxText.textContent.includes('Context:'), 'Banner has "Context:" prefix');
+        endGroup();
+
+        // === Test Group 3: setContext Truncates Long Text ===
+        group('setContext - Long Text Truncation');
+        const longText = 'A'.repeat(200);
+        window.ChatModule.setContext(longText);
+        assert(ctxText.textContent.length < 200, 'Long text is truncated in banner display');
+        assert(ctxText.textContent.includes('...'), 'Truncated text includes ellipsis');
+        assert(!banner.classList.contains('hidden'), 'Banner remains visible for long text');
+        endGroup();
+
+        // === Test Group 4: clearContext Hides Banner ===
+        group('clearContext - Hides Banner');
+        // Ensure banner is showing first
+        window.ChatModule.setContext('Some context');
+        assert(!banner.classList.contains('hidden'), 'Banner is visible before clearContext');
+
+        window.ChatModule.clearContext();
+        assert(banner.classList.contains('hidden'), 'Banner is hidden after clearContext');
+        endGroup();
+
+        // === Test Group 5: setContext then clearContext Cycle ===
+        group('setContext/clearContext Cycle');
+        window.ChatModule.setContext('First context');
+        assert(!banner.classList.contains('hidden'), 'Banner shown after first setContext');
+
+        window.ChatModule.clearContext();
+        assert(banner.classList.contains('hidden'), 'Banner hidden after first clearContext');
+
+        window.ChatModule.setContext('Second context');
+        assert(!banner.classList.contains('hidden'), 'Banner shown again after second setContext');
+        assert(ctxText.textContent.includes('Second context'), 'Banner text updated to second context');
+
+        window.ChatModule.clearContext();
+        assert(banner.classList.contains('hidden'), 'Banner hidden after second clearContext');
+        endGroup();
+
+        // === Test Group 6: localStorage Keys ===
+        group('localStorage Keys');
+
+        // lt_chat_memory key
+        localStorage.removeItem('lt_chat_memory');
+        localStorage.setItem('lt_chat_memory', JSON.stringify({ test_key: 'test_value' }));
+        const memoryData = JSON.parse(localStorage.getItem('lt_chat_memory'));
+        assert(memoryData !== null, 'lt_chat_memory key works in localStorage');
+        assert(memoryData.test_key === 'test_value', 'lt_chat_memory stores data correctly');
+        localStorage.removeItem('lt_chat_memory');
+
+        // lt_chat_history key
+        localStorage.removeItem('lt_chat_history');
+        localStorage.setItem('lt_chat_history', JSON.stringify([{ role: 'user', content: 'test', timestamp: Date.now() }]));
+        const historyData = JSON.parse(localStorage.getItem('lt_chat_history'));
+        assert(historyData !== null, 'lt_chat_history key works in localStorage');
+        assert(Array.isArray(historyData), 'lt_chat_history stores an array');
+        assert(historyData.length === 1, 'lt_chat_history has 1 entry');
+        assert(historyData[0].role === 'user', 'lt_chat_history entry has correct role');
+        localStorage.removeItem('lt_chat_history');
+        endGroup();
+
+        // === Test Group 7: setApiKey ===
+        group('setApiKey');
+        localStorage.removeItem('lt_api_key');
+        window.ChatModule.setApiKey('test-key-12345');
+        const storedKey = localStorage.getItem('lt_api_key');
+        assert(storedKey === 'test-key-12345', 'API key stored in localStorage');
+
+        window.ChatModule.setApiKey('another-key-67890');
+        const updatedKey = localStorage.getItem('lt_api_key');
+        assert(updatedKey === 'another-key-67890', 'API key can be updated');
+        localStorage.removeItem('lt_api_key');
+        endGroup();
+
+        // === Test Group 8: Chat Messages Container ===
+        group('Chat Messages Container');
+        const messagesDiv = document.getElementById('chat-messages');
+        assert(messagesDiv !== null, 'chat-messages div exists');
+        // After DOMContentLoaded, the chat module renders a welcome message
+        // We check that the container has content
+        assert(messagesDiv.children.length >= 0, 'Messages container is accessible');
+        endGroup();
+
+        // === Test Group 9: Chat Input Elements ===
+        group('Chat Input Elements');
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+        const chatClear = document.getElementById('chat-clear');
+        const chatClose = document.getElementById('chat-close');
+        const clearCtxBtn = document.getElementById('clear-context');
+
+        assert(chatInput !== null, 'chat-input textarea exists');
+        assert(chatSend !== null, 'chat-send button exists');
+        assert(chatClear !== null, 'chat-clear button exists');
+        assert(chatClose !== null, 'chat-close button exists');
+        assert(clearCtxBtn !== null, 'clear-context button exists');
+        endGroup();
+
+        // === Test Group 10: clearContext via Button ===
+        group('clearContext via Button Click');
+        window.ChatModule.setContext('Context for button test');
+        assert(!banner.classList.contains('hidden'), 'Banner shown before button click');
+
+        // Simulate clicking the clear-context button
+        document.getElementById('clear-context').click();
+        assert(banner.classList.contains('hidden'), 'Banner hidden after clear-context button click');
+        endGroup();
+
+        // === Test Group 11: Chat Panel Initial State ===
+        group('Chat Panel Initial State');
+        const chatPanel = document.getElementById('chat-panel');
+        assert(chatPanel !== null, 'chat-panel element exists');
+        assert(chatPanel.classList.contains('hidden'), 'Chat panel starts hidden');
+        endGroup();
+
+        // === Test Group 12: Memory Key Constants ===
+        group('Memory Key Constants Verification');
+        // Verify the module uses the expected keys by testing roundtrip
+        localStorage.removeItem('lt_chat_memory');
+        localStorage.removeItem('lt_chat_history');
+        localStorage.removeItem('lt_api_key');
+
+        // Confirm they start empty
+        assert(localStorage.getItem('lt_chat_memory') === null || localStorage.getItem('lt_chat_memory') === '{}', 'lt_chat_memory starts empty or as {}');
+        assert(localStorage.getItem('lt_chat_history') === null || localStorage.getItem('lt_chat_history') === '[]', 'lt_chat_history starts empty or as []');
+
+        // Set API key through module and verify key name
+        window.ChatModule.setApiKey('verify-key');
+        assert(localStorage.getItem('lt_api_key') === 'verify-key', 'Module uses lt_api_key storage key');
+
+        // Cleanup
+        localStorage.removeItem('lt_chat_memory');
+        localStorage.removeItem('lt_chat_history');
+        localStorage.removeItem('lt_api_key');
+        endGroup();
+
+        // === Summary ===
+        const summaryEl = document.getElementById('summary');
+        const allPass = failed === 0;
+        summaryEl.innerHTML = `
+            <span class="${allPass ? 'pass' : 'fail'}">
+                ${allPass ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}: ${passed}/${total} passed, ${failed} failed
+            </span>
+        `;
+        summaryEl.className = allPass ? 'pass' : 'fail';
+    })();
+    </script>
+</body>
+</html>

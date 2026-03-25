@@ -888,6 +888,48 @@ body {
     display: block;
 }
 
+/* === Auth UI === */
+.auth-btn {
+    font-size: 0.72rem !important;
+    font-weight: 600;
+    padding: 0 12px;
+    white-space: nowrap;
+}
+
+.auth-btn-small {
+    font-size: 0.68rem !important;
+    padding: 0 8px;
+    width: auto !important;
+    min-width: auto !important;
+}
+
+.auth-user-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.auth-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.auth-name {
+    color: rgba(255,255,255,0.8);
+    font-size: 0.75rem;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .auth-name { display: none; }
+    .auth-avatar { width: 24px; height: 24px; }
+}
+
 /* === Language Toggle === */
 .lang-btn {
     font-size: 0.78rem !important;
