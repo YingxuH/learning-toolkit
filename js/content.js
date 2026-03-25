@@ -2,9 +2,10 @@
 const TEXTBOOK = {
   lastUpdated: "2026-03-24",
   changelog: [
-    { date: "2026-03-24", text: "Added 6 Production War Stories: SD batch-size backfire, vLLM OOM debugging, Whisper hallucination fix, LoRA data corruption, NCCL timeout, Agent infinite loop" },
-    { date: "2026-03-24", text: "Fixed KV-cache calculations with GQA formula; updated diffusion step comparisons" },
-    { date: "2026-03-24", text: "Initial release: 10 chapters covering Audio AI, LLM Inference, ML Training, and Career Prep" }
+    { date: "2026-03-25", text: "Added 5 new chapters: Transformer Deep Dive, General LLMs, Quantization, RAG Systems, DS&A for AI" },
+    { date: "2026-03-25", text: "Google Auth login, Gemini AI chat, mobile highlight fix, Firebase backend" },
+    { date: "2026-03-24", text: "10x content expansion: 87K words, 65 sections, 241 code blocks, 69 interview questions" },
+    { date: "2026-03-24", text: "Initial release with Chinese bilingual support and 6 production war stories" }
   ],
   readingGoals: [
     { id: "week1", label: "Week 1: Audio AI Foundations", chapters: ["audio-llm-landscape", "speech-to-speech", "tts-technology"] },
