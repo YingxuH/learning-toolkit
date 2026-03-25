@@ -2,7 +2,8 @@
 // Must run synchronously after all content-ch*.js files load
 
 function _mergeExpandedContent() {
-    if (!window.TEXTBOOK) return;
+    if (!window.TEXTBOOK) { console.log('[MERGE] No TEXTBOOK'); return; }
+    console.log('[MERGE] Starting merge. CONTENT_CH1_2:', typeof window.CONTENT_CH1_2);
 
     var chapterMap = {};
     TEXTBOOK.parts.forEach(function(part) {
@@ -12,7 +13,8 @@ function _mergeExpandedContent() {
     });
 
     function merge(chapterId, newSections) {
-        if (!newSections || !chapterMap[chapterId]) return;
+        if (!newSections || !chapterMap[chapterId]) { console.log('[MERGE] Skip:', chapterId, 'sections:', !!newSections, 'chapter:', !!chapterMap[chapterId]); return; }
+        console.log('[MERGE] Merging', chapterId, 'with', newSections.length, 'sections');
         var chapter = chapterMap[chapterId];
         var merged = [];
         var seen = {};
