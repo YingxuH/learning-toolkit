@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>User Data Module Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>User Data Module Unit Tests</h1>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <!-- Mock AuthModule (no Firebase) -->
+    <script>
+    window.AuthModule = {
+        getUser: function() { return null; }
+    };
+    </script>
+
+    <script src="../js/user-data.js"></script>
+    <script>
+    (function() {
+        let passed = 0, failed = 0, total = 0;
+        const results = document.getElementById('test-results');
+
+        function assert(condition, testName, details) {
+            total++;
+            const status = condition ? 'PASS' : 'FAIL';
+            if (condition) passed++; else failed++;
+            const cls = condition ? 'pass' : 'fail';
+            results.innerHTML += `<div class="${cls}">[${status}] ${testName}${details && !condition ? ' - ' + details : ''}</div>`;
+        }
+
+        function group(name) { results.innerHTML += `<div class="test-group"><h3>${name}</h3>`; }
+        function endGroup() { results.innerHTML += `</div>`; }
+
+        // Clean up localStorage before tests
+        Object.values(window.UserDataModule.MANAGED_KEYS).forEach(key => {
+            localStorage.removeItem(key);
+        });
+
+        // === Test Group 1: Module Existence ===
+        group('UserData Module Existence');
+        assert(typeof window.UserDataModule !== 'undefined', 'UserDataModule exists');
+        assert(typeof window.UserDataModule.save === 'function', 'save is a function');
+        assert(typeof window.UserDataModule.load === 'function', 'load is a function');
+        assert(typeof window.UserDataModule.migrateLocalToFirestore === 'function', 'migrateLocalToFirestore is a function');
+        assert(typeof window.UserDataModule.syncFromFirestore === 'function', 'syncFromFirestore is a function');
+        assert(typeof window.UserDataModule.MANAGED_KEYS === 'object', 'MANAGED_KEYS exists');
+        endGroup();
+
+        // === Test Group 2: MANAGED_KEYS ===
+        group('Managed Keys');
+        const keys = window.UserDataModule.MANAGED_KEYS;
+        assert(keys.highlights === 'lt_highlights', 'highlights key correct');
+        assert(keys.comments === 'lt_comments', 'comments key correct');
+        assert(keys.chatMemory === 'lt_chat_memory', 'chatMemory key correct');
+        assert(keys.chatHistory === 'lt_chat_history', 'chatHistory key correct');
+        assert(keys.readingProgress === 'lt_reading_progress', 'readingProgress key correct');
+        assert(keys.theme === 'theme', 'theme key correct');
+        assert(keys.language === 'lt_language', 'language key correct');
+        endGroup();
+
+        // === Test Group 3: Save and Load (localStorage only) ===
+        group('Save and Load - localStorage');
+        UserDataModule.save('lt_highlights', { 'hl-1': { color: 'yellow', text: 'test' } });
+        const loaded = UserDataModule.load('lt_highlights');
+        assert(loaded !== null, 'Loaded data is not null');
+        assert(loaded['hl-1'] !== undefined, 'Highlight hl-1 exists');
+        assert(loaded['hl-1'].color === 'yellow', 'Color is yellow');
+        assert(loaded['hl-1'].text === 'test', 'Text is "test"');
+        endGroup();
+
+        // === Test Group 4: Save String Value ===
+        group('Save String Value');
+        UserDataModule.save('theme', 'dark');
+        assert(UserDataModule.load('theme') === 'dark', 'Theme loaded as string');
+        UserDataModule.save('theme', 'light');
+        assert(UserDataModule.load('theme') === 'light', 'Theme updated to light');
+        endGroup();
+
+        // === Test Group 5: Save Complex Object ===
+        group('Save Complex Object');
+        const complexData = {
+            messages: [
+                { role: 'user', content: 'hello', timestamp: 123 },
+                { role: 'assistant', content: 'hi', timestamp: 456 }
+            ]
+        };
+        UserDataModule.save('lt_chat_history', complexData);
+        const loadedComplex = UserDataModule.load('lt_chat_history');
+        assert(Array.isArray(loadedComplex.messages), 'Messages is an array');
+        assert(loadedComplex.messages.length === 2, 'Two messages');
+        assert(loadedComplex.messages[0].role === 'user', 'First message is user');
+        endGroup();
+
+        // === Test Group 6: Load Non-Existent Key ===
+        group('Load Non-Existent Key');
+        localStorage.removeItem('lt_nonexistent');
+        const nothing = UserDataModule.load('lt_nonexistent');
+        assert(nothing === null, 'Non-existent key returns null');
+        endGroup();
+
+        // === Test Group 7: Overwrite Value ===
+        group('Overwrite Value');
+        UserDataModule.save('lt_reading_progress', { ch1: 1000 });
+        UserDataModule.save('lt_reading_progress', { ch1: 1000, ch2: 2000 });
+        const progress = UserDataModule.load('lt_reading_progress');
+        assert(progress.ch1 === 1000, 'ch1 preserved');
+        assert(progress.ch2 === 2000, 'ch2 added');
+        endGroup();
+
+        // === Test Group 8: No Firestore Without Auth ===
+        group('No Firestore Without Auth');
+        // When AuthModule.getUser() returns null, save should only write localStorage
+        // (no errors should occur)
+        let noError = true;
+        try {
+            UserDataModule.save('lt_language', 'zh');
+        } catch (e) {
+            noError = false;
+        }
+        assert(noError, 'Save without auth does not throw');
+        assert(UserDataModule.load('lt_language') === 'zh', 'Data saved to localStorage without auth');
+        endGroup();
+
+        // === Test Group 9: Malformed JSON Handling ===
+        group('Malformed JSON Handling');
+        localStorage.setItem('lt_comments', '{invalid json}}}');
+        let malformedResult;
+        let noError2 = true;
+        try {
+            malformedResult = UserDataModule.load('lt_comments');
+        } catch (e) {
+            noError2 = false;
+        }
+        assert(noError2, 'Loading malformed JSON does not throw');
+        // It will try JSON.parse, fail, and return the string
+        assert(malformedResult !== null, 'Returns something for malformed JSON');
+        endGroup();
+
+        // === Cleanup ===
+        Object.values(window.UserDataModule.MANAGED_KEYS).forEach(key => {
+            localStorage.removeItem(key);
+        });
+
+        // === Summary ===
+        const summaryEl = document.getElementById('summary');
+        const allPass = failed === 0;
+        summaryEl.innerHTML = `<span class="${allPass ? 'pass' : 'fail'}">${allPass ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}: ${passed}/${total} passed, ${failed} failed</span>`;
+    })();
+    </script>
+</body>
+</html>

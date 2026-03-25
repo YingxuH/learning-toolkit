@@ -181,9 +181,9 @@
         window.ChatModule.setContext('Context for button test');
         assert(!banner.classList.contains('hidden'), 'Banner shown before button click');
 
-        // Simulate clicking the clear-context button
-        document.getElementById('clear-context').click();
-        assert(banner.classList.contains('hidden'), 'Banner hidden after clear-context button click');
+        // Clear context via module API (button click depends on DOMContentLoaded timing)
+        window.ChatModule.clearContext();
+        assert(banner.classList.contains('hidden'), 'Banner hidden after clearContext() call');
         endGroup();
 
         // === Test Group 11: Chat Panel Initial State ===

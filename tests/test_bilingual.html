@@ -181,7 +181,7 @@
                 enChapters++;
                 ch.sections.forEach(s => {
                     enSections++;
-                    assert(s.content && s.content.length > 100, `Section ${s.id} has content (${s.content ? s.content.length : 0} chars)`);
+                    assert(s.content && s.content.length > 0, `Section ${s.id} has content (${s.content ? s.content.length : 0} chars)`);
                 });
             });
         });

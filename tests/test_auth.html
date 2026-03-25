@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Auth Module Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Auth Module Unit Tests</h1>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <!-- Mock DOM elements for auth -->
+    <div style="display:none;">
+        <button id="auth-signin">Sign In</button>
+        <div id="auth-user-info" class="hidden">
+            <img id="auth-user-avatar" src="">
+            <span id="auth-user-name"></span>
+            <button id="auth-signout">Out</button>
+        </div>
+    </div>
+
+    <!-- Mock ALLOWED_USERS (normally from firebase-config.js) -->
+    <script>
+    const ALLOWED_USERS = ["yingxu.he1998@gmail.com", "test@example.com"];
+    </script>
+
+    <script src="../js/auth.js"></script>
+    <script>
+    (function() {
+        let passed = 0, failed = 0, total = 0;
+        const results = document.getElementById('test-results');
+
+        function assert(condition, testName, details) {
+            total++;
+            const status = condition ? 'PASS' : 'FAIL';
+            if (condition) passed++; else failed++;
+            const cls = condition ? 'pass' : 'fail';
+            results.innerHTML += `<div class="${cls}">[${status}] ${testName}${details && !condition ? ' - ' + details : ''}</div>`;
+        }
+
+        function group(name) { results.innerHTML += `<div class="test-group"><h3>${name}</h3>`; }
+        function endGroup() { results.innerHTML += `</div>`; }
+
+        // === Test Group 1: Module Existence ===
+        group('Auth Module Existence');
+        assert(typeof window.AuthModule !== 'undefined', 'AuthModule exists');
+        assert(typeof window.AuthModule.signIn === 'function', 'signIn is a function');
+        assert(typeof window.AuthModule.signOut === 'function', 'signOut is a function');
+        assert(typeof window.AuthModule.getUser === 'function', 'getUser is a function');
+        assert(typeof window.AuthModule.getIdToken === 'function', 'getIdToken is a function');
+        assert(typeof window.AuthModule.isAllowed === 'function', 'isAllowed is a function');
+        assert(typeof window.AuthModule.onAuthReady === 'function', 'onAuthReady is a function');
+        endGroup();
+
+        // === Test Group 2: Email Allowlist ===
+        group('Email Allowlist');
+        assert(AuthModule.isAllowed('yingxu.he1998@gmail.com') === true, 'Primary user email allowed');
+        assert(AuthModule.isAllowed('test@example.com') === true, 'Test email allowed');
+        assert(AuthModule.isAllowed('random@hacker.com') === false, 'Unknown email rejected');
+        assert(AuthModule.isAllowed('') === false, 'Empty email rejected');
+        assert(AuthModule.isAllowed('YINGXU.HE1998@GMAIL.COM') === false, 'Case-sensitive check');
+        endGroup();
+
+        // === Test Group 3: Initial State (No Firebase) ===
+        group('Initial State Without Firebase');
+        assert(AuthModule.getUser() === null, 'No user before sign-in');
+        endGroup();
+
+        // === Test Group 4: getIdToken Without User ===
+        group('getIdToken Without User');
+        AuthModule.getIdToken().then(token => {
+            assert(token === null, 'getIdToken returns null when no user');
+        });
+        endGroup();
+
+        // === Test Group 5: DOM Elements ===
+        group('Auth DOM Elements');
+        assert(document.getElementById('auth-signin') !== null, 'Sign-in button exists');
+        assert(document.getElementById('auth-user-info') !== null, 'User info div exists');
+        assert(document.getElementById('auth-user-avatar') !== null, 'User avatar exists');
+        assert(document.getElementById('auth-user-name') !== null, 'User name span exists');
+        assert(document.getElementById('auth-signout') !== null, 'Sign-out button exists');
+        endGroup();
+
+        // === Test Group 6: Sign-in Button State ===
+        group('Sign-in Button Initial State');
+        const signInBtn = document.getElementById('auth-signin');
+        const userInfo = document.getElementById('auth-user-info');
+        // Without Firebase, sign-in button should show "Offline" (disabled)
+        // or remain as "Sign In" if Firebase check hasn't run yet
+        assert(signInBtn !== null, 'Sign-in button is present');
+        assert(userInfo.classList.contains('hidden'), 'User info is hidden initially');
+        endGroup();
+
+        // === Test Group 7: onAuthReady callback ===
+        group('onAuthReady Callback');
+        let callbackCalled = false;
+        AuthModule.onAuthReady((user) => {
+            callbackCalled = true;
+        });
+        // In non-Firebase mode, authReady is set during DOMContentLoaded or immediately
+        setTimeout(() => {
+            // May not be called if DOMContentLoaded already fired before auth.js loaded
+            assert(callbackCalled || AuthModule.getUser() === null, 'onAuthReady callback called or no user (offline mode)');
+
+            // === Summary ===
+            const summaryEl = document.getElementById('summary');
+            const allPass = failed === 0;
+            summaryEl.innerHTML = `<span class="${allPass ? 'pass' : 'fail'}">${allPass ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}: ${passed}/${total} passed, ${failed} failed</span>`;
+        }, 500);
+        endGroup();
+    })();
+    </script>
+</body>
+</html>

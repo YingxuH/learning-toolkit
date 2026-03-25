@@ -2,59 +2,84 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>AI Engineer Learning Toolkit - Test Runner</title>
+    <title>Learning Toolkit - Test Suite</title>
     <style>
-        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; background: #1a1a2e; color: #e0e0e0; max-width: 700px; margin: 0 auto; }
         h1 { color: #6c8aff; margin-bottom: 8px; }
-        .subtitle { color: #999; margin-bottom: 32px; }
+        .subtitle { color: #888; margin-bottom: 32px; }
+        a { color: #6c8aff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
         .test-list { list-style: none; padding: 0; }
-        .test-list li { margin: 12px 0; }
-        .test-list a {
-            color: #8ab4f8;
-            text-decoration: none;
-            display: inline-block;
-            padding: 10px 16px;
-            border: 1px solid #333;
-            border-radius: 4px;
-            transition: background 0.2s, border-color 0.2s;
-        }
-        .test-list a:hover {
-            background: #2a2a4e;
-            border-color: #6c8aff;
-        }
-        .test-desc { color: #aaa; font-size: 0.9em; margin-left: 8px; }
-        footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #333; color: #666; font-size: 0.85em; }
+        .test-list li { padding: 14px 20px; margin: 8px 0; background: #1e1e28; border: 1px solid #2a2a38; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .test-list li:hover { border-color: #6c8aff; }
+        .test-name { font-weight: 600; }
+        .test-desc { font-size: 0.85em; color: #888; margin-top: 4px; }
+        .badge { font-size: 0.75em; padding: 3px 10px; border-radius: 12px; font-weight: 600; }
+        .badge-core { background: rgba(67,97,238,0.15); color: #6c8aff; }
+        .badge-new { background: rgba(39,174,96,0.15); color: #27ae60; }
     </style>
 </head>
 <body>
-    <h1>AI Engineer Learning Toolkit - Test Suite</h1>
-    <p class="subtitle">Open each test file in a browser to run its unit tests.</p>
+    <h1>Test Suite</h1>
+    <p class="subtitle">AI Engineer Learning Toolkit - 8 Test Files</p>
 
     <ul class="test-list">
         <li>
-            <a href="test_bilingual.html">test_bilingual.html</a>
-            <span class="test-desc">-- I18n module, Chinese translations, content structure, language toggle</span>
+            <div>
+                <div class="test-name"><a href="test_bilingual.html">Bilingual Support</a></div>
+                <div class="test-desc">I18n module, Chinese translations, language toggle, content integrity</div>
+            </div>
+            <span class="badge badge-core">Core</span>
         </li>
         <li>
-            <a href="test_highlights.html">test_highlights.html</a>
-            <span class="test-desc">-- HighlightManager: apply, remove, colors, localStorage persistence</span>
+            <div>
+                <div class="test-name"><a href="test_highlights.html">Highlights</a></div>
+                <div class="test-desc">HighlightManager: storage, apply, remove, colors, DOM manipulation</div>
+            </div>
+            <span class="badge badge-core">Core</span>
         </li>
         <li>
-            <a href="test_search.html">test_search.html</a>
-            <span class="test-desc">-- Search module: query matching, case insensitivity, special chars, result limits</span>
+            <div>
+                <div class="test-name"><a href="test_chat.html">AI Chat</a></div>
+                <div class="test-desc">ChatModule: context, memory, history, API key, DOM elements</div>
+            </div>
+            <span class="badge badge-core">Core</span>
         </li>
         <li>
-            <a href="test_comments.html">test_comments.html</a>
-            <span class="test-desc">-- CommentModule: save, retrieve, remove, modal, tooltip</span>
+            <div>
+                <div class="test-name"><a href="test_comments.html">Comments</a></div>
+                <div class="test-desc">CommentModule: CRUD, storage, modal, tooltip, escaping</div>
+            </div>
+            <span class="badge badge-core">Core</span>
         </li>
         <li>
-            <a href="test_chat.html">test_chat.html</a>
-            <span class="test-desc">-- ChatModule: context banner, API key, localStorage keys, UI elements</span>
+            <div>
+                <div class="test-name"><a href="test_search.html">Search</a></div>
+                <div class="test-desc">Search index, query matching, case insensitivity, result structure</div>
+            </div>
+            <span class="badge badge-core">Core</span>
+        </li>
+        <li>
+            <div>
+                <div class="test-name"><a href="test_auth.html">Authentication</a></div>
+                <div class="test-desc">AuthModule: exports, allowlist, initial state, DOM elements</div>
+            </div>
+            <span class="badge badge-new">New</span>
+        </li>
+        <li>
+            <div>
+                <div class="test-name"><a href="test_userdata.html">User Data</a></div>
+                <div class="test-desc">UserDataModule: save/load, managed keys, complex objects, malformed JSON</div>
+            </div>
+            <span class="badge badge-new">New</span>
+        </li>
+        <li>
+            <div>
+                <div class="test-name"><a href="test_content_loader.html">Content Loader</a></div>
+                <div class="test-desc">Content merge, chapter expansion, section IDs, quality checks, volume</div>
+            </div>
+            <span class="badge badge-new">New</span>
         </li>
     </ul>
-
-    <footer>
-        All tests are self-contained HTML files. No npm or build tools required.
-    </footer>
 </body>
 </html>

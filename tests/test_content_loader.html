@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Content Loader Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Content Loader Unit Tests</h1>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+
+    <!-- Load content modules in order -->
+    <script src="../js/content.js"></script>
+    <script src="../js/content-ch1-2.js"></script>
+    <script src="../js/content-ch3-4.js"></script>
+    <script src="../js/content-ch5-6.js"></script>
+    <script src="../js/content-ch7-8.js"></script>
+    <script src="../js/content-ch11-12.js"></script>
+    <script src="../js/content-ch13-14.js"></script>
+    <script src="../js/content-ch15.js"></script>
+    <script src="../js/content-loader.js"></script>
+
+    <script>
+    (function() {
+        let passed = 0, failed = 0, total = 0;
+        const results = document.getElementById('test-results');
+
+        function assert(condition, testName, details) {
+            total++;
+            const status = condition ? 'PASS' : 'FAIL';
+            if (condition) passed++; else failed++;
+            const cls = condition ? 'pass' : 'fail';
+            results.innerHTML += `<div class="${cls}">[${status}] ${testName}${details && !condition ? ' - ' + details : ''}</div>`;
+        }
+
+        function group(name) { results.innerHTML += `<div class="test-group"><h3>${name}</h3>`; }
+        function endGroup() { results.innerHTML += `</div>`; }
+
+        // Build chapter map
+        const chapterMap = {};
+        TEXTBOOK.parts.forEach(function(part) {
+            part.chapters.forEach(function(ch) {
+                chapterMap[ch.id] = ch;
+            });
+        });
+
+        // === Test Group 1: TEXTBOOK Structure ===
+        group('TEXTBOOK Structure');
+        assert(typeof TEXTBOOK !== 'undefined', 'TEXTBOOK exists');
+        assert(TEXTBOOK.parts.length >= 6, 'Has 6+ parts: ' + TEXTBOOK.parts.length);
+        let totalChapters = 0;
+        TEXTBOOK.parts.forEach(p => { totalChapters += p.chapters.length; });
+        assert(totalChapters >= 15, 'Has 15+ chapters: ' + totalChapters);
+        endGroup();
+
+        // === Test Group 2: Content Objects Exist ===
+        group('Content Objects Exist');
+        assert(typeof CONTENT_CH1_2 !== 'undefined', 'CONTENT_CH1_2 exists');
+        assert(typeof CONTENT_CH3_4 !== 'undefined', 'CONTENT_CH3_4 exists');
+        assert(typeof CONTENT_CH5_6 !== 'undefined', 'CONTENT_CH5_6 exists');
+        assert(typeof CONTENT_CH7_8 !== 'undefined', 'CONTENT_CH7_8 exists');
+        assert(typeof CONTENT_CH11_12 !== 'undefined', 'CONTENT_CH11_12 exists');
+        assert(typeof CONTENT_CH13_14 !== 'undefined', 'CONTENT_CH13_14 exists');
+        assert(typeof CONTENT_CH15 !== 'undefined', 'CONTENT_CH15 exists');
+        endGroup();
+
+        // === Test Group 3: Merge Function Ran ===
+        group('Content Merge Ran');
+        assert(typeof _mergeExpandedContent === 'function', '_mergeExpandedContent function exists');
+        // Check that chapters have expanded sections (more than stubs)
+        const ch1 = chapterMap['audio-llm-landscape'];
+        assert(ch1.sections.length >= 6, 'Ch1 has 6+ sections after merge: ' + ch1.sections.length);
+        assert(ch1.sections[0].content.length > 1000, 'Ch1 first section has expanded content: ' + ch1.sections[0].content.length + ' chars');
+        endGroup();
+
+        // === Test Group 4: All Original Chapters Expanded ===
+        group('Original Chapters Expanded');
+        const originalChapters = ['audio-llm-landscape', 'speech-to-speech', 'tts-technology',
+            'speculative-decoding', 'vllm-serving', 'rl-training', 'ml-engineering', 'agent-development'];
+        originalChapters.forEach(id => {
+            const ch = chapterMap[id];
+            assert(ch !== undefined, id + ' chapter exists');
+            if (ch) {
+                assert(ch.sections.length >= 6, id + ' has 6+ sections: ' + ch.sections.length);
+                const firstContent = ch.sections[0].content;
+                assert(firstContent && firstContent.length > 500, id + ' first section has content: ' + (firstContent ? firstContent.length : 0) + ' chars');
+            }
+        });
+        endGroup();
+
+        // === Test Group 5: New Chapters Expanded ===
+        group('New Chapters Expanded');
+        const newChapters = ['transformer-basics', 'general-llms', 'quantization', 'rag-systems', 'dsa-for-ai'];
+        newChapters.forEach(id => {
+            const ch = chapterMap[id];
+            assert(ch !== undefined, id + ' chapter exists');
+            if (ch) {
+                assert(ch.sections.length >= 8, id + ' has 8+ sections: ' + ch.sections.length);
+                const firstContent = ch.sections[0].content;
+                assert(firstContent && firstContent.length > 500, id + ' first section has content: ' + (firstContent ? firstContent.length : 0) + ' chars');
+            }
+        });
+        endGroup();
+
+        // === Test Group 6: New Section IDs Exist ===
+        group('New Section IDs');
+        const newSectionIds = [
+            // Ch1 new
+            'audiollm-training', 'audiollm-eval', 'audio-reasoning',
+            // Ch2 new
+            'moshi-deep-dive', 'duplex-training', 's2s-pipeline',
+            // Ch11
+            'self-attention', 'positional-encoding', 'efficient-attention',
+            // Ch13
+            'quant-awq', 'quant-fp8', 'quant-gguf',
+            // Ch14
+            'rag-vector-db', 'rag-chunking', 'rag-pipeline',
+            // Ch15
+            'dsa-tokenizer', 'dsa-beam-search', 'dsa-sampling'
+        ];
+        newSectionIds.forEach(id => {
+            let found = false;
+            TEXTBOOK.parts.forEach(p => {
+                p.chapters.forEach(ch => {
+                    ch.sections.forEach(s => {
+                        if (s.id === id) found = true;
+                    });
+                });
+            });
+            assert(found, 'Section ' + id + ' exists in TEXTBOOK');
+        });
+        endGroup();
+
+        // === Test Group 7: Content Quality Spot Checks ===
+        group('Content Quality Spot Checks');
+        // Check that expanded content has HTML elements
+        const sdCh = chapterMap['speculative-decoding'];
+        if (sdCh && sdCh.sections[0]) {
+            const sdContent = sdCh.sections[0].content;
+            assert(sdContent.includes('<pre><code>') || sdContent.includes('<pre>'), 'SD chapter has code blocks');
+            assert(sdContent.includes('<table>') || sdContent.includes('</table>') || sdContent.includes('<ul>'), 'SD chapter has tables or lists');
+            assert(sdContent.includes('callout') || sdContent.includes('interview-q'), 'SD chapter has callouts or interview Qs');
+        }
+
+        const ragCh = chapterMap['rag-systems'];
+        if (ragCh && ragCh.sections[0]) {
+            const ragContent = ragCh.sections[0].content;
+            assert(ragContent.includes('<p>'), 'RAG chapter has paragraphs');
+            assert(ragContent.length > 2000, 'RAG chapter first section is substantial: ' + ragContent.length + ' chars');
+        }
+
+        const dsaCh = chapterMap['dsa-for-ai'];
+        if (dsaCh && dsaCh.sections[0]) {
+            const dsaContent = dsaCh.sections[0].content;
+            assert(dsaContent.includes('class ') || dsaContent.includes('def ') || dsaContent.includes('function'), 'DS&A chapter has code implementations');
+        }
+        endGroup();
+
+        // === Test Group 8: Total Content Volume ===
+        group('Total Content Volume');
+        let totalContentLength = 0;
+        let totalSections = 0;
+        TEXTBOOK.parts.forEach(p => {
+            p.chapters.forEach(ch => {
+                ch.sections.forEach(s => {
+                    totalSections++;
+                    if (s.content) totalContentLength += s.content.length;
+                });
+            });
+        });
+        assert(totalSections >= 100, 'Total sections >= 100: ' + totalSections);
+        assert(totalContentLength > 500000, 'Total content > 500K chars: ' + totalContentLength);
+        endGroup();
+
+        // === Test Group 9: Changelog and Reading Goals ===
+        group('Changelog and Reading Goals');
+        assert(TEXTBOOK.changelog && TEXTBOOK.changelog.length >= 3, 'Has 3+ changelog entries');
+        assert(TEXTBOOK.readingGoals && TEXTBOOK.readingGoals.length >= 6, 'Has 6+ reading goals (6 weeks)');
+        assert(TEXTBOOK.readingGoals.some(g => g.chapters.includes('transformer-basics')), 'Reading goals include transformer chapter');
+        assert(TEXTBOOK.readingGoals.some(g => g.chapters.includes('rag-systems')), 'Reading goals include RAG chapter');
+        endGroup();
+
+        // === Summary ===
+        const summaryEl = document.getElementById('summary');
+        const allPass = failed === 0;
+        summaryEl.innerHTML = `<span class="${allPass ? 'pass' : 'fail'}">${allPass ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}: ${passed}/${total} passed, ${failed} failed</span>`;
+    })();
+    </script>
+</body>
+</html>
