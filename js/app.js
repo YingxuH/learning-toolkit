@@ -55,10 +55,14 @@
     // === Theme ===
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
+        // Tailwind dark mode
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
         state.theme = theme;
         localStorage.setItem('theme', theme);
-        const btn = document.getElementById('theme-toggle');
-        btn.innerHTML = theme === 'dark' ? '&#9788;' : '&#9789;';
     }
 
     // === Table of Contents ===

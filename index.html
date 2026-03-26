@@ -1,102 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Interactive textbook for AI engineers covering Audio AI, LLM inference, ML training, and interview preparation. Features search, highlighting, comments, and AI assistant.">
+    <meta name="description" content="Interactive textbook for AI engineers covering Audio AI, LLM inference, ML training, and interview preparation.">
     <title>AI Engineer Learning Toolkit</title>
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    accent: { 50: '#eff2ff', 100: '#dbe1fe', 200: '#bcc6fe', 300: '#8da2fc', 400: '#5b74f8', 500: '#4361ee', 600: '#2b3fe4', 700: '#2230d0', 800: '#2029a9', 900: '#1f2786' },
+                    surface: { 50: '#fafafa', 100: '#f5f5f5', 200: '#eeeeee', 800: '#1e1e24', 850: '#1a1a22', 900: '#16161a', 950: '#0d0d14' }
+                },
+                fontFamily: {
+                    sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    mono: ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                }
+            }
+        }
+    }
+    </script>
+    <!-- Inter + JetBrains Mono fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/highlights.css">
     <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/app.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
 </head>
-<body>
-    <!-- Top Navigation Bar -->
-    <nav id="top-nav">
-        <div class="nav-left">
-            <button id="sidebar-toggle" class="nav-btn" title="Toggle Sidebar">&#9776;</button>
-            <h1 class="nav-title">AI Engineer Learning Toolkit</h1>
-        </div>
-        <div class="nav-center">
-            <div class="search-container">
-                <input type="text" id="global-search" placeholder="Search content... (Ctrl+K)" autocomplete="off">
-                <div id="search-results" class="search-dropdown hidden"></div>
+<body class="h-full bg-white dark:bg-surface-900 text-gray-800 dark:text-gray-200 font-sans antialiased">
+
+    <!-- Top Nav -->
+    <nav id="top-nav" class="fixed top-0 left-0 right-0 h-12 bg-white/80 dark:bg-surface-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 z-50 flex items-center px-4 gap-3">
+        <button id="sidebar-toggle" class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition" title="Toggle Sidebar">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+        </button>
+        <h1 class="nav-title text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">AI Engineer Learning Toolkit</h1>
+        <div class="flex-1 max-w-md mx-4 hidden sm:block">
+            <div class="search-container relative">
+                <input type="text" id="global-search" class="w-full h-8 px-3 text-sm bg-gray-100 dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-accent-500/30 focus:border-accent-500 placeholder-gray-400 dark:placeholder-gray-500 text-gray-700 dark:text-gray-300 transition" placeholder="Search... (Ctrl+K)" autocomplete="off">
+                <div id="search-results" class="search-dropdown hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-80 overflow-y-auto z-50"></div>
             </div>
         </div>
-        <div class="nav-right">
-            <!-- Auth UI -->
-            <button id="auth-signin" class="nav-btn auth-btn" title="Sign In with Google">Sign In</button>
-            <div id="auth-user-info" class="auth-user-info hidden">
-                <img id="auth-user-avatar" class="auth-avatar" alt="" src="">
-                <span id="auth-user-name" class="auth-name"></span>
-                <button id="auth-signout" class="nav-btn auth-btn-small" title="Sign Out">Out</button>
+        <div class="flex items-center gap-1.5 ml-auto">
+            <button id="auth-signin" class="h-8 px-3 text-xs font-medium rounded-lg bg-accent-500 text-white hover:bg-accent-600 transition" title="Sign In">Sign In</button>
+            <div id="auth-user-info" class="hidden flex items-center gap-2">
+                <img id="auth-user-avatar" class="w-7 h-7 rounded-full ring-2 ring-gray-200 dark:ring-gray-700" alt="" src="">
+                <span id="auth-user-name" class="text-xs font-medium text-gray-600 dark:text-gray-400 max-w-[60px] truncate hidden sm:inline"></span>
+                <button id="auth-signout" class="h-7 px-2 text-xs rounded-md bg-gray-100 dark:bg-surface-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 transition" title="Sign Out">Out</button>
             </div>
-            <button id="lang-toggle" class="nav-btn lang-btn" title="Switch Language">EN</button>
-            <button id="theme-toggle" class="nav-btn" title="Toggle Theme">&#9789;</button>
-            <button id="chat-toggle" class="nav-btn" title="AI Assistant (Ctrl+/)">&#128172;</button>
+            <button id="lang-toggle" class="lang-btn w-8 h-8 flex items-center justify-center rounded-md text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Switch Language">EN</button>
+            <button id="theme-toggle" class="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Toggle Theme">
+                <svg class="w-4 h-4 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+                <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+            </button>
+            <button id="chat-toggle" class="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="AI Assistant (Ctrl+/)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+            </button>
+            <button id="console-toggle" class="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="User Console">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
+            </button>
         </div>
     </nav>
 
     <!-- Main Layout -->
-    <div id="app-container">
-        <!-- Sidebar / Table of Contents -->
-        <aside id="sidebar">
-            <div class="sidebar-header">
-                <h2>Contents</h2>
-                <button id="sidebar-close" title="Close sidebar">&times;</button>
+    <div id="app-container" class="flex pt-12 h-full">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 min-w-[16rem] bg-gray-50 dark:bg-surface-850 border-r border-gray-200 dark:border-gray-800 overflow-y-auto transition-all duration-200 flex-shrink-0">
+            <div class="sidebar-header flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+                <h2 class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Contents</h2>
+                <button id="sidebar-close" class="w-6 h-6 hidden md-hidden items-center justify-center rounded text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition">&times;</button>
             </div>
-            <nav id="toc"></nav>
+            <nav id="toc" class="py-1"></nav>
         </aside>
 
-        <!-- Main Content Area -->
-        <main id="content-area">
-            <div id="textbook-content"></div>
+        <!-- Main Content -->
+        <main id="content-area" class="flex-1 overflow-y-auto scroll-smooth">
+            <div id="textbook-content" class="max-w-3xl mx-auto px-6 sm:px-10 py-10 pb-32"></div>
         </main>
 
+        <!-- User Console Panel -->
+        <aside id="console-panel" class="hidden w-96 min-w-[24rem] bg-white dark:bg-surface-900 border-l border-gray-200 dark:border-gray-800 overflow-y-auto flex-col">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-800">
+                <h3 class="text-sm font-semibold">Console</h3>
+                <button id="console-close" class="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition">&times;</button>
+            </div>
+            <div id="console-content" class="p-5 space-y-6"></div>
+        </aside>
+
         <!-- AI Chat Panel -->
-        <aside id="chat-panel" class="hidden">
-            <div class="chat-header">
-                <h3>AI Assistant</h3>
-                <div class="chat-header-actions">
-                    <button id="chat-clear" class="chat-btn" title="Clear Chat">Clear</button>
-                    <button id="chat-close" class="chat-btn" title="Close">&times;</button>
+        <aside id="chat-panel" class="hidden w-96 min-w-[24rem] bg-white dark:bg-surface-900 border-l border-gray-200 dark:border-gray-800 flex-col">
+            <div class="chat-header flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+                <h3 class="text-sm font-semibold">AI Assistant</h3>
+                <div class="chat-header-actions flex items-center gap-2">
+                    <button id="chat-clear" class="chat-btn h-7 px-2.5 text-xs rounded-md bg-gray-100 dark:bg-surface-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 transition">Clear</button>
+                    <button id="chat-close" class="chat-btn w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition">&times;</button>
                 </div>
             </div>
-            <div id="chat-context-banner" class="hidden">
-                <span id="chat-context-text"></span>
-                <button id="clear-context" title="Clear context">&times;</button>
+            <div id="chat-context-banner" class="hidden px-4 py-2 bg-accent-50 dark:bg-accent-900/20 border-b border-accent-200 dark:border-accent-800 text-xs text-accent-600 dark:text-accent-400 flex items-center justify-between">
+                <span id="chat-context-text" class="truncate flex-1 mr-2"></span>
+                <button id="clear-context" class="text-accent-500 hover:text-accent-700 font-bold">&times;</button>
             </div>
-            <div id="chat-messages"></div>
-            <div id="chat-input-area">
-                <textarea id="chat-input" placeholder="Ask about highlighted text or any topic..." rows="2"></textarea>
-                <button id="chat-send" title="Send">&#10148;</button>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+            <div id="chat-input-area" class="p-3 border-t border-gray-200 dark:border-gray-800 flex gap-2 items-end">
+                <textarea id="chat-input" class="flex-1 resize-none rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-surface-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent-500/30 focus:border-accent-500 placeholder-gray-400 transition" placeholder="Ask about highlighted text or any topic..." rows="2"></textarea>
+                <button id="chat-send" class="w-9 h-9 flex items-center justify-center rounded-lg bg-accent-500 text-white hover:bg-accent-600 transition flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+                </button>
             </div>
         </aside>
     </div>
 
-    <!-- Highlight Toolbar (appears on text selection) -->
-    <div id="highlight-toolbar" class="hidden">
-        <button class="hl-btn hl-yellow" data-color="yellow" title="Highlight Yellow"></button>
-        <button class="hl-btn hl-green" data-color="green" title="Highlight Green"></button>
-        <button class="hl-btn hl-blue" data-color="blue" title="Highlight Blue"></button>
-        <button class="hl-btn hl-pink" data-color="pink" title="Highlight Pink"></button>
-        <button class="hl-btn" id="hl-comment" title="Add Comment">&#128221;</button>
-        <button class="hl-btn" id="hl-ask-ai" title="Ask AI about this">&#129302;</button>
+    <!-- Highlight Toolbar -->
+    <div id="highlight-toolbar" class="hidden fixed z-[1500] flex gap-1.5 p-2 bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl">
+        <button class="hl-btn hl-yellow w-9 h-9 rounded-full border-2 border-yellow-300 bg-yellow-100 hover:scale-110 transition" data-color="yellow" title="Yellow"></button>
+        <button class="hl-btn hl-green w-9 h-9 rounded-full border-2 border-green-300 bg-green-100 hover:scale-110 transition" data-color="green" title="Green"></button>
+        <button class="hl-btn hl-blue w-9 h-9 rounded-full border-2 border-blue-300 bg-blue-100 hover:scale-110 transition" data-color="blue" title="Blue"></button>
+        <button class="hl-btn hl-pink w-9 h-9 rounded-full border-2 border-pink-300 bg-pink-100 hover:scale-110 transition" data-color="pink" title="Pink"></button>
+        <button class="hl-btn w-9 h-9 rounded-full border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:scale-110 transition flex items-center justify-center text-sm" id="hl-comment" title="Comment">&#128221;</button>
+        <button class="hl-btn w-9 h-9 rounded-full border-2 border-accent-300 bg-accent-50 hover:scale-110 transition flex items-center justify-center text-sm" id="hl-ask-ai" title="Ask AI">&#129302;</button>
     </div>
 
     <!-- Comment Modal -->
-    <div id="comment-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Add Comment</h3>
-            <textarea id="comment-text" placeholder="Write your comment..." rows="4"></textarea>
-            <div class="modal-actions">
-                <button id="comment-save" class="btn-primary">Save</button>
-                <button id="comment-cancel" class="btn-secondary">Cancel</button>
+    <div id="comment-modal" class="modal hidden fixed inset-0 z-[2000] bg-black/40 flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-surface-800 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <h3 class="text-base font-semibold mb-3">Add Comment</h3>
+            <textarea id="comment-text" class="w-full h-24 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-surface-900 resize-none outline-none focus:ring-2 focus:ring-accent-500/30 focus:border-accent-500 placeholder-gray-400 transition" placeholder="Write your comment..."></textarea>
+            <div class="flex justify-end gap-2 mt-3">
+                <button id="comment-cancel" class="h-9 px-4 text-sm rounded-lg bg-gray-100 dark:bg-surface-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 transition">Cancel</button>
+                <button id="comment-save" class="h-9 px-4 text-sm rounded-lg bg-accent-500 text-white hover:bg-accent-600 transition font-medium">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK (loaded from CDN - no build step needed) -->
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/30 z-30" style="top:48px;"></div>
+
+    <!-- Reading Progress Bar -->
+    <div id="reading-progress" class="fixed top-12 left-0 h-0.5 bg-accent-500 z-40 transition-all duration-100" style="width:0%"></div>
+
+    <!-- Chapter Indicator -->
+    <div id="chapter-indicator" class="fixed bottom-4 right-4 px-3 py-1 bg-gray-800/80 dark:bg-gray-200/80 text-white dark:text-gray-800 text-xs font-medium rounded-full opacity-0 transition-opacity pointer-events-none z-40"></div>
+
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -124,5 +174,6 @@
     <script src="js/chat.js"></script>
     <script src="js/diagrams.js"></script>
     <script src="js/war-stories.js"></script>
+    <script src="js/console.js"></script>
 </body>
 </html>
