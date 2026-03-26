@@ -24,19 +24,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject API keys from secrets
+      - name: Inject secrets into config
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FB_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
-          cat > js/config.local.js << 'SCRIPT'
-          // Auto-generated during deployment - DO NOT COMMIT
+          # Inject Gemini API key
+          cat > js/config.local.js << ENDSCRIPT
+          // Auto-generated at deploy time from GitHub Secrets
           (function() {
+            // Set Gemini key if not already in localStorage
             if (typeof setGeminiKey === 'function') {
               var existing = localStorage.getItem('lt_gemini_key');
               if (!existing) {
-                setGeminiKey('${{ secrets.GEMINI_API_KEY }}');
+                setGeminiKey('${GEMINI_KEY}');
+              }
+            }
+
+            // Set Firebase config if secret is provided
+            var fbConfig = null;
+            try {
+              fbConfig = JSON.parse('${FB_CONFIG}');
+            } catch(e) {}
+
+            if (fbConfig && fbConfig.apiKey && typeof firebase !== 'undefined') {
+              try {
+                if (!firebase.apps.length) {
+                  firebase.initializeApp(fbConfig);
+                  console.log('[Firebase] Initialized from deploy config');
+                }
+              } catch(e) {
+                console.log('[Firebase] Init error:', e.message);
               }
             }
           })();
-          SCRIPT
+          ENDSCRIPT
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

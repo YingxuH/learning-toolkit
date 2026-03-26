@@ -1,34 +1,28 @@
 // === App Configuration ===
-// Gemini API key - loaded from localStorage or prompted on first use
-// NEVER commit actual API keys to git
+// API keys are injected at deploy time via GitHub Secrets
+// NEVER commit actual keys to this file
 
 const APP_CONFIG = {
-    // Gemini model to use
     geminiModel: "gemini-3.1-pro-preview",
     geminiApiBase: "https://generativelanguage.googleapis.com/v1beta/models/",
-
-    // Firebase (optional - for multi-device sync with <10 users)
-    // Set to null to disable Firebase entirely (localStorage-only mode)
-    firebase: null,
-
-    // Allowed users for Firebase auth (if enabled)
     allowedUsers: ["yingxu.he1998@gmail.com"]
 };
 
-// Gemini API key management
+// Gemini API key management (stored in localStorage)
 function getGeminiKey() {
     return localStorage.getItem('lt_gemini_key');
 }
 
 function setGeminiKey(key) {
-    localStorage.setItem('lt_gemini_key', key);
+    if (key) localStorage.setItem('lt_gemini_key', key);
+    else localStorage.removeItem('lt_gemini_key');
 }
 
 function promptGeminiKey() {
     const key = prompt(
         'Enter your Gemini API key to enable AI chat.\n\n' +
         'Get one free at: https://aistudio.google.com/apikey\n\n' +
-        'The key is stored locally in your browser only (never sent to our servers).'
+        'The key is stored locally in your browser only.'
     );
     if (key && key.trim().startsWith('AIza')) {
         setGeminiKey(key.trim());
@@ -37,11 +31,5 @@ function promptGeminiKey() {
     return null;
 }
 
-// Initialize Firebase only if config is provided
-if (APP_CONFIG.firebase && typeof firebase !== 'undefined') {
-    try {
-        firebase.initializeApp(APP_CONFIG.firebase);
-    } catch(e) {
-        console.log('[Firebase] Init failed:', e.message);
-    }
-}
+// Firebase is initialized by config.local.js (injected at deploy time)
+// If not available, the app works in localStorage-only mode
