@@ -23,6 +23,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Inject API keys from secrets
+        run: |
+          cat > js/config.local.js << 'SCRIPT'
+          // Auto-generated during deployment - DO NOT COMMIT
+          (function() {
+            if (typeof setGeminiKey === 'function') {
+              var existing = localStorage.getItem('lt_gemini_key');
+              if (!existing) {
+                setGeminiKey('${{ secrets.GEMINI_API_KEY }}');
+              }
+            }
+          })();
+          SCRIPT
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

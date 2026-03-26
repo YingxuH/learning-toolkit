@@ -1,37 +1,47 @@
-// Firebase Configuration
-// NOTE: These are public client-side keys (safe to expose in source code).
-// The actual Firebase project must be created at https://console.firebase.google.com
-// After creating the project, replace these placeholder values with real ones.
-//
-// Setup steps:
-// 1. Go to https://console.firebase.google.com
-// 2. Create a new project (e.g., "learning-toolkit-ai")
-// 3. Enable Authentication > Google provider
-// 4. Enable Cloud Firestore
-// 5. Add a Web app and copy the config below
-// 6. Deploy Cloud Functions (see functions/ directory)
+// === App Configuration ===
+// Gemini API key - loaded from localStorage or prompted on first use
+// NEVER commit actual API keys to git
 
-const FIREBASE_CONFIG = {
-    // REPLACE these with your actual Firebase project config
-    apiKey: "REPLACE_WITH_YOUR_FIREBASE_API_KEY",
-    authDomain: "learning-toolkit-ai.firebaseapp.com",
-    projectId: "learning-toolkit-ai",
-    storageBucket: "learning-toolkit-ai.appspot.com",
-    messagingSenderId: "REPLACE",
-    appId: "REPLACE"
+const APP_CONFIG = {
+    // Gemini model to use
+    geminiModel: "gemini-2.5-flash-preview-05-20",
+    geminiApiBase: "https://generativelanguage.googleapis.com/v1beta/models/",
+
+    // Firebase (optional - for multi-device sync with <10 users)
+    // Set to null to disable Firebase entirely (localStorage-only mode)
+    firebase: null,
+
+    // Allowed users for Firebase auth (if enabled)
+    allowedUsers: ["yingxu.he1998@gmail.com"]
 };
 
-// Gemini Cloud Function URL (deployed via Firebase Functions)
-const GEMINI_FUNCTION_URL = "https://us-central1-learning-toolkit-ai.cloudfunctions.net/geminiChat";
+// Gemini API key management
+function getGeminiKey() {
+    return localStorage.getItem('lt_gemini_key');
+}
 
-// Allowed users (email allowlist)
-const ALLOWED_USERS = [
-    "yingxu.he1998@gmail.com"
-];
+function setGeminiKey(key) {
+    localStorage.setItem('lt_gemini_key', key);
+}
 
-// Initialize Firebase (only if SDK is loaded)
-if (typeof firebase !== 'undefined' && FIREBASE_CONFIG.apiKey !== 'REPLACE_WITH_YOUR_FIREBASE_API_KEY') {
-    firebase.initializeApp(FIREBASE_CONFIG);
-} else {
-    console.log('[Firebase] Not initialized - configure firebase-config.js with real project credentials');
+function promptGeminiKey() {
+    const key = prompt(
+        'Enter your Gemini API key to enable AI chat.\n\n' +
+        'Get one free at: https://aistudio.google.com/apikey\n\n' +
+        'The key is stored locally in your browser only (never sent to our servers).'
+    );
+    if (key && key.trim().startsWith('AIza')) {
+        setGeminiKey(key.trim());
+        return key.trim();
+    }
+    return null;
+}
+
+// Initialize Firebase only if config is provided
+if (APP_CONFIG.firebase && typeof firebase !== 'undefined') {
+    try {
+        firebase.initializeApp(APP_CONFIG.firebase);
+    } catch(e) {
+        console.log('[Firebase] Init failed:', e.message);
+    }
 }
