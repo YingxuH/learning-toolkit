@@ -5,7 +5,11 @@
 const APP_CONFIG = {
     geminiModel: "gemini-3.1-pro-preview",
     geminiApiBase: "https://generativelanguage.googleapis.com/v1beta/models/",
-    allowedUsers: ["yingxu.he1998@gmail.com"]
+    allowedUsers: [
+        "yingxu.he1998@gmail.com",
+        "lewis.won@gmail.com",
+        "hesirui00@gmail.com"
+    ]
 };
 
 // Gemini API key management (stored in localStorage)
