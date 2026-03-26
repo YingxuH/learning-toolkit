@@ -110,7 +110,7 @@
         if (geminiKey) {
             try {
                 const model = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.geminiModel)
-                    ? APP_CONFIG.geminiModel : 'gemini-2.5-flash-preview-05-20';
+                    ? APP_CONFIG.geminiModel : 'gemini-3.1-pro-preview';
                 const baseUrl = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.geminiApiBase)
                     ? APP_CONFIG.geminiApiBase : 'https://generativelanguage.googleapis.com/v1beta/models/';
 
