@@ -747,14 +747,19 @@ with sync_playwright() as p:
 
     group("Tablet Layout (768px)")
     tablet = page.evaluate('''() => {
+        const sb = document.getElementById('sidebar');
+        const sbCollapsed = sb.classList.contains('collapsed');
+        const sbPos = getComputedStyle(sb).position;
         return {
             noHScroll: document.body.scrollWidth <= window.innerWidth,
             contentW: parseFloat(getComputedStyle(document.getElementById('content-area')).width),
-            sidebarW: parseFloat(getComputedStyle(document.getElementById('sidebar')).width),
+            sidebarCollapsed: sbCollapsed,
+            sidebarIsOverlay: sbPos === 'fixed',
         };
     }''')
     test(tablet['noHScroll'], "No horizontal scroll on tablet")
-    test(tablet['contentW'] + tablet['sidebarW'] <= 768 + 5, "Sidebar+content fit tablet", f"got {tablet['sidebarW']:.0f}+{tablet['contentW']:.0f}")
+    test(tablet['sidebarCollapsed'] or tablet['sidebarIsOverlay'], "Sidebar collapsed or overlay on tablet", f"collapsed={tablet['sidebarCollapsed']}, overlay={tablet['sidebarIsOverlay']}")
+    test(tablet['contentW'] <= 768, "Content fits tablet viewport", f"got {tablet['contentW']:.0f}px")
 
     page.close()
     browser.close()
