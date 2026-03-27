@@ -27,8 +27,8 @@
         setupKeyboardShortcuts();
         setupReadingProgress();
 
-        // Collapse sidebar on mobile by default
-        if (window.innerWidth < 768) {
+        // Collapse sidebar on mobile/tablet by default
+        if (window.innerWidth < 900) {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.add('collapsed');
             state.sidebarOpen = false;
