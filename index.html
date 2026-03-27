@@ -35,12 +35,12 @@
 <body class="h-full bg-white dark:bg-surface-900 text-gray-800 dark:text-gray-200 font-sans antialiased">
 
     <!-- Top Nav -->
-    <nav id="top-nav" class="fixed top-0 left-0 right-0 h-12 bg-white/80 dark:bg-surface-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 z-50 flex items-center px-4 gap-3">
-        <button id="sidebar-toggle" class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition" title="Toggle Sidebar">
+    <nav id="top-nav" class="fixed top-0 left-0 right-0 h-14 bg-white/80 dark:bg-surface-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 z-50 flex items-center px-4 gap-3">
+        <button id="sidebar-toggle" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition" title="Toggle Sidebar">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
         </button>
         <h1 class="nav-title text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">AI Engineer Learning Toolkit</h1>
-        <div class="flex-1 max-w-md mx-4 hidden sm:block">
+        <div class="flex-1 max-w-md mx-4">
             <div class="search-container relative">
                 <input type="text" id="global-search" class="w-full h-8 px-3 text-sm bg-gray-100 dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-accent-500/30 focus:border-accent-500 placeholder-gray-400 dark:placeholder-gray-500 text-gray-700 dark:text-gray-300 transition" placeholder="Search... (Ctrl+K)" autocomplete="off">
                 <div id="search-results" class="search-dropdown hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-80 overflow-y-auto z-50"></div>
@@ -53,22 +53,22 @@
                 <span id="auth-user-name" class="text-xs font-medium text-gray-600 dark:text-gray-400 max-w-[60px] truncate hidden sm:inline"></span>
                 <button id="auth-signout" class="h-7 px-2 text-xs rounded-md bg-gray-100 dark:bg-surface-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 transition" title="Sign Out">Out</button>
             </div>
-            <button id="lang-toggle" class="lang-btn w-8 h-8 flex items-center justify-center rounded-md text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Switch Language">EN</button>
-            <button id="theme-toggle" class="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Toggle Theme">
+            <button id="lang-toggle" class="lang-btn w-11 h-11 flex items-center justify-center rounded-md text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Switch Language">EN</button>
+            <button id="theme-toggle" class="w-11 h-11 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Toggle Theme">
                 <svg class="w-4 h-4 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
                 <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
             </button>
-            <button id="chat-toggle" class="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="AI Assistant (Ctrl+/)">
+            <button id="chat-toggle" class="w-11 h-11 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="AI Assistant (Ctrl+/)">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
             </button>
-            <button id="console-toggle" class="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="User Console">
+            <button id="console-toggle" class="w-11 h-11 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="User Console">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
             </button>
         </div>
     </nav>
 
     <!-- Main Layout -->
-    <div id="app-container" class="flex pt-12 h-full">
+    <div id="app-container" class="flex pt-14 h-full">
         <!-- Sidebar -->
         <aside id="sidebar" class="w-64 min-w-[16rem] bg-gray-50 dark:bg-surface-850 border-r border-gray-200 dark:border-gray-800 overflow-y-auto transition-all duration-200 flex-shrink-0">
             <div class="sidebar-header flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
@@ -138,10 +138,10 @@
     </div>
 
     <!-- Sidebar Overlay (mobile) -->
-    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/30 z-30" style="top:48px;"></div>
+    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/30 z-30" style="top:56px;"></div>
 
     <!-- Reading Progress Bar -->
-    <div id="reading-progress" class="fixed top-12 left-0 h-0.5 bg-accent-500 z-40 transition-all duration-100" style="width:0%"></div>
+    <div id="reading-progress" class="fixed top-14 left-0 h-0.5 bg-accent-500 z-40 transition-all duration-100" style="width:0%"></div>
 
     <!-- Chapter Indicator -->
     <div id="chapter-indicator" class="fixed bottom-4 right-4 px-3 py-1 bg-gray-800/80 dark:bg-gray-200/80 text-white dark:text-gray-800 text-xs font-medium rounded-full opacity-0 transition-opacity pointer-events-none z-40"></div>

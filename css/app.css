@@ -192,10 +192,10 @@
 
 /* Mobile sidebar */
 @media (max-width: 768px) {
-    #sidebar { position: fixed; top: 48px; left: 0; bottom: 0; z-index: 40; width: 280px; transform: translateX(0); transition: transform 0.2s ease; }
+    #sidebar { position: fixed; top: 56px; left: 0; bottom: 0; z-index: 40; width: 280px; transform: translateX(0); transition: transform 0.2s ease; }
     #sidebar.collapsed { transform: translateX(-100%); }
     #sidebar-close { display: flex !important; }
-    #chat-panel, #console-panel { position: fixed; top: 48px; right: 0; bottom: 0; width: 100%; min-width: 100%; z-index: 45; }
+    #chat-panel, #console-panel { position: fixed; top: 56px; right: 0; bottom: 0; width: 100%; min-width: 100%; z-index: 45; }
     .chapter table { min-width: 500px; }
 }
 
