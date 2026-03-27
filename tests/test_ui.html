@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>UI Visual Regression Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .test-group { margin: 16px 0; padding: 12px; border: 1px solid #333; border-radius: 4px; }
+        .test-group h3 { color: #6c8aff; margin-bottom: 8px; }
+        #summary { margin-top: 24px; padding: 16px; border-top: 2px solid #6c8aff; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>UI Visual Regression Tests</h1>
+    <p style="color:#888;">These tests must be run on the LIVE site via Playwright (not locally) because they need Tailwind CSS and the full DOM.</p>
+    <p style="color:#888;">Run with: <code>python3 tests/run_ui_tests.py</code></p>
+    <div id="test-results"></div>
+    <div id="summary"></div>
+</body>
+</html>
